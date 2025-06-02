@@ -41,7 +41,7 @@
         <h2>গুগল দিয়ে লগইন করুন</h2>
         <!-- গুগল লগইন বাটন -->
         <div id="g_id_onload"
-             data-client_id="YOUR_GOOGLE_CLIENT_ID"
+             data-client_id="415991713212-o81pj4vjem5kni087uleiefq4vc686ml.apps.googleusercontent.com"
              data-callback="handleCredentialResponse"
              data-auto_prompt="false">
         </div>
@@ -62,7 +62,7 @@
             document.getElementById("user-name").innerText = data.name + " (" + data.email + ")";
         }
 
-        // JWT ডিকোড করার জন্য ফাংশন (সিম্পল ভার্সন)
+        // JWT ডিকোড করার জন্য ফাংশন
         function jwt_decode(token) {
             const base64Url = token.split('.')[1];
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
