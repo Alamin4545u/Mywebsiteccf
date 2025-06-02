@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>গুগল লগইন ওয়েবসাইট</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 20px;
+        }
+        .content {
+            padding: 50px;
+        }
+        #g_id_signin {
+            margin: 20px auto;
+        }
+        footer {
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>স্বাগতম আমার ওয়েবসাইটে</h1>
+    </header>
+    <div class="content">
+        <h2>গুগল দিয়ে লগইন করুন</h2>
+        <!-- গুগল লগইন বাটন -->
+        <div id="g_id_onload"
+             data-client_id="YOUR_GOOGLE_CLIENT_ID"
+             data-callback="handleCredentialResponse"
+             data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin" data-type="standard" data-size="large"></div>
+        <p id="user-info" style="display: none;">লগইন সফল! ব্যবহারকারীর তথ্য: <span id="user-name"></span></p>
+    </div>
+    <footer>
+        <p>© 2025 আমার ওয়েবসাইট। সর্বস্বত্ব সংরক্ষিত।</p>
+    </footer>
+
+    <!-- গুগল API স্ক্রিপ্ট -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+        function handleCredentialResponse(response) {
+            // গুগল থেকে প্রাপ্ত টোকেন
+            const data = jwt_decode(response.credential);
+            document.getElementById("user-info").style.display = "block";
+            document.getElementById("user-name").innerText = data.name + " (" + data.email + ")";
+        }
+
+        // JWT ডিকোড করার জন্য ফাংশন (সিম্পল ভার্সন)
+        function jwt_decode(token) {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        }
+    </script>
+</body>
+</html>
