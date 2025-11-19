@@ -1,344 +1,368 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Bkash Earn Free TK</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://ad.gigapub.tech/script?id=4203"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <style>
-        :root { --primary: #6366f1; --success: #10b981; --gray-100: #f8fafc; --gray-200: #e2e8f0; --gray-800: #1e293b; --radius: 20px; --shadow: 0 20px 40px rgba(0,0,0,0.12); }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Hind Siliguri', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: var(--gray-800); min-height: 100vh; overflow: hidden; }
-        .container { max-width: 480px; margin: 0 auto; background: white; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); height: 100vh; display: flex; flex-direction: column; }
-        .header { background: linear-gradient(135deg, var(--primary), #4f46e5); color: white; padding: 25px 20px; text-align: center; flex-shrink: 0; }
-        .balance-card { background: rgba(255,255,255,0.25); backdrop-filter: blur(12px); border-radius: 18px; padding: 20px; margin-top: 16px; border: 1px solid rgba(255,255,255,0.3); }
-        .balance-amount { font-size: 38px; font-weight: 700; font-family: 'Poppins', sans-serif; }
-        .actions { padding: 20px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; flex-shrink: 0; }
-        .btn { padding: 16px; border: none; border-radius: 16px; font-weight: 600; font-size: 17px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-withdraw { background: var(--success); color: white; grid-column: span 1; }
-        .btn-history { background: var(--gray-200); color: var(--gray-800); grid-column: span 1; }
-        .btn-refer { background-color: #f59e0b; color: white; grid-column: span 1; }
-        .task-section { flex: 1; overflow-y: auto; padding: 0 20px 30px; -webkit-overflow-scrolling: touch; }
-        .section-title { font-size: 20px; font-weight: 700; margin: 25px 0 18px; color: var(--gray-800); text-align: center; }
-        .task-item { background: var(--gray-100); border-radius: 18px; padding: 22px; margin-bottom: 18px; border: 1px solid var(--gray-200); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
-        .task-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; }
-        .task-reward { color: #555; font-weight: 500; font-size: 16px; margin-bottom: 16px; }
-        .countdown { text-align: center; font-size: 19px; font-weight: 700; color: var(--primary); margin: 16px 0; }
-        .task-btn { width: 100%; padding: 16px; color: white; border: none; border-radius: 14px; font-size: 18px; font-weight: 700; cursor: pointer; margin-top: 12px; }
-        .task-btn.claim { background: var(--success); }
-        .task-btn.start { background: var(--primary); }
-        .task-btn:disabled { background: #94a3b8; cursor: not-allowed; }
-        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 999; align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { background: white; border-radius: 24px; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow); }
-    </style>
+<meta charset="UTF-8">
+<title>বোতল ফ্লিপ - প্রিমিয়াম এডিশন</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+        margin:0; overflow:hidden; font-family:'Segoe UI',sans-serif;
+        background:linear-gradient(#2e7d32,#1b5e20); height:100vh;
+        user-select:none; -webkit-user-select:none; touch-action:manipulation;
+    }
+    canvas { display:block; }
+    
+    /* UI */
+    #ui { position:absolute; inset:0; pointer-events:none; color:white; }
+    #top-bar {
+        display:flex; justify-content:space-between; align-items:center;
+        padding:15px 20px; background:rgba(0,0,0,0.25); backdrop-filter:blur(10px);
+    }
+    .stat {
+        display:flex; align-items:center; background:rgba(255,255,255,0.2);
+        padding:8px 18px; border-radius:50px; font-weight:bold; font-size:1.4rem;
+        backdrop-filter:blur(8px); pointer-events:all;
+    }
+    .stat img { width:36px; height:36px; margin-right:8px; }
+    #pause-btn {
+        width:50px; height:50px; background:rgba(255,255,255,0.25);
+        border-radius:50%; display:grid; place-items:center; font-size:1.8rem;
+        pointer-events:all;
+    }
+    #progress-container {
+        position:absolute; top:90px; left:20px; right:20px; height:30px;
+        background:rgba(0,0,0,0.3); border-radius:20px; overflow:hidden;
+        pointer-events:none;
+    }
+    #progress {
+        height:100%; width:100%; background:linear-gradient(90deg,#ffb300,#ff6d00);
+        border-radius:20px; transition:width 0.4s ease;
+    }
+
+    /* Screens */
+    .screen {
+        position:absolute; inset:0; background:rgba(0,0,0,0.8);
+        display:flex; flex-direction:column; justify-content:center; align-items:center;
+        color:white; text-align:center;
+    }
+    h1 { font-size:4rem; margin-bottom:20px; color:#ffeb3b; text-shadow:0 5px 10px #000; }
+    button {
+        padding:18px 60px; margin:15px; font-size:2rem; background:#e91e63;
+        color:white; border:none; border-radius:50px; cursor:pointer;
+        box-shadow:0 8px 0 #ad1457; transition:0.2s;
+    }
+    button:active { transform:translateY(8px); box-shadow:none; }
+    .hidden { display:none; }
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header"><h1>Bkash Earn Free TK</h1><div class="balance-card"><div style="font-size:15px; opacity:0.9;">মোট ব্যালেন্স</div><div class="balance-amount" id="user-balance">৳0.00</div></div><div style="margin-top:14px;"><span id="user-name">User</span></div></div>
-        <div class="actions">
-            <button class="btn btn-withdraw" onclick="openWithdrawModal()">উইথড্র</button>
-            <button class="btn btn-history" onclick="showHistoryModal()">হিস্টোরি</button>
-            <button class="btn btn-refer" onclick="showReferralModal()">রেফার</button>
+
+<canvas id="c"></canvas>
+
+<div id="ui">
+    <div id="top-bar">
+        <div class="stat">
+            <img src="https://i.imgur.com/v8pE8V5.png"> <span id="coins">1000</span>
         </div>
-        <div class="task-section"><h3 class="section-title">আজকের টাস্ক</h3><div id="task-list"></div></div>
+        <div class="stat">
+            <img src="https://i.imgur.com/tH3f8c5.png"> <span id="lives">3</span>
+        </div>
+        <div class="stat">
+            <img src="https://i.imgur.com/8qQ3Y3a.png"> <span id="level">1</span>
+        </div>
+        <div id="pause-btn">II</div>
     </div>
-    <div id="appModal" class="modal"></div>
 
-    <script>
-        const supabase = window.supabase.createClient('https://pcnqgdmusmcpstxfntgn.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjbnFnZG11c21jcHN0eGZudGduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzODMwMzUsImV4cCI6MjA3ODk1OTAzNX0.a8CjieXPwU29O9qXTSG7xcHrj3NWsxvb-ca8MuXx7OE');
-        const tg = window.Telegram.WebApp;
-        tg.ready(); tg.expand();
+    <div id="progress-container">
+        <div id="progress"></div>
+    </div>
+</div>
 
-        let currentUser = { id: null, balance: 0, referral_code: null };
-        let vpnSettings = {};
-        let activeTimers = {};
+<!-- Screens -->
+<div id="start-screen" class="screen">
+    <h1>বোতল ফ্লিপ</h1>
+    <button id="play-btn">খেলা শুরু</button>
+</div>
 
-        window.addEventListener('load', async () => {
-            if (!tg.initDataUnsafe?.user) return alert('টেলিগ্রাম থেকে খুলুন');
-            currentUser.id = tg.initDataUnsafe.user.id;
-            document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name || 'User';
-            const startParam = tg.initDataUnsafe.start_param;
-            if (startParam) localStorage.setItem('referral_code', startParam);
-            await Promise.all([loadUser(), loadTasks(), fetchVPNSettings()]);
-            listenForTaskChanges();
-        });
+<div id="gameover-screen" class="screen hidden">
+    <h1>গেম ওভার!</h1>
+    <p style="font-size:2rem;">তোমার স্কোর: <span id="final-score">0</span></p>
+    <button id="restart-btn">আবার খেলো</button>
+</div>
 
-        async function loadUser() {
-            let { data } = await supabase.from('users').select('balance, referral_code').eq('id', currentUser.id).single();
-            if (!data) {
-                 const referredByCode = localStorage.getItem('referral_code');
-                let referredById = null;
-                if (referredByCode) {
-                    const { data: referrer } = await supabase.from('users').select('id, balance').eq('referral_code', referredByCode).single();
-                    if (referrer && referrer.id !== currentUser.id) {
-                        referredById = referrer.id;
-                        const { data: bonusSetting } = await supabase.from('settings').select('value').eq('key', 'referral_bonus').single();
-                        if (bonusSetting) {
-                            const referralBonus = parseFloat(bonusSetting.value.amount);
-                            await supabase.from('users').update({ balance: referrer.balance + referralBonus }).eq('id', referredById);
-                        }
-                    }
-                }
-                const newReferralCode = 'ref' + currentUser.id + Date.now().toString().slice(-4);
-                const { data: newUser } = await supabase.from('users').insert({ id: currentUser.id, balance: 0, referral_code: newReferralCode, referred_by: referredById }).select().single();
-                data = newUser;
-                localStorage.removeItem('referral_code');
+<audio id="flip" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3"></audio>
+<audio id="land" src="https://assets.mixkit.co/sfx/preview/mixkit-unlock-game-notification-253.mp3"></audio>
+<audio id="perfect" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3"></audio>
+<audio id="fail" src="https://assets.mixkit.co/sfx/preview/mixkit-player-losing-or-failing-2043.mp3"></audio>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+canvas.width = Math.min(window.innerWidth, 500);
+canvas.height = window.innerHeight;
+
+let score = 0, lives = 3, level = 1, coins = 1000;
+let bottle, platforms = [], currentPlatform;
+let dragging = false, startX, startY;
+let gameActive = false;
+
+// বোতল ক্লাস
+class Bottle {
+    constructor() { this.reset(); }
+    reset() {
+        this.w = 40; this.h = 100;
+        this.x = currentPlatform.x + currentPlatform.w/2 - 20;
+        this.y = currentPlatform.y - this.h;
+        this.vx = this.vy = this.rot = this.rotSpeed = 0;
+        this.flipping = false;
+    }
+    draw() {
+        ctx.save();
+        ctx.translate(this.x + 20, this.y + 50);
+        ctx.rotate(this.rot * Math.PI / 180);
+
+        // বোতল বডি
+        ctx.fillStyle = '#d32f2f';
+        ctx.roundRect(-20, -50, 40, 100, 20).fill();
+        ctx.fillStyle = '#b71c1c';
+        ctx.roundRect(-16, -40, 32, 80, 16).fill();
+
+        // ক্যাপ
+        ctx.fillStyle = '#424242';
+        ctx.fillRect(-14, -58, 28, 15);
+
+        // লেবেল
+        ctx.fillStyle = '#fff';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Cola', 0, 10);
+
+        ctx.restore();
+    }
+    update() {
+        if (!this.flipping) return;
+        this.vy += 0.5;
+        this.x += this.vx;
+        this.y += this.vy;
+        this.rot += this.rotSpeed;
+    }
+    launch(angle, power) {
+        this.flipping = true;
+        this.vx = Math.cos(angle) * power * 0.2;
+        this.vy = Math.sin(angle) * power * 0.2 - 3;
+        this.rotSpeed = power * 0.18 * (this.vx > 0 ? -1 : 1);
+        play('flip');
+    }
+}
+
+// প্ল্যাটফর্ম
+class Platform {
+    constructor(x, y, w, type='normal') {
+        this.x = x; this.y = y; this.w = w; this.h = 30; this.type = type;
+    }
+    draw() {
+        // টেবিল/শেল্ফ
+        ctx.fillStyle = '#6d4c41';
+        ctx.fillRect(this.x, this.y, this.w, this.h);
+        ctx.fillStyle = '#4e342e';
+        ctx.fillRect(this.x+5, this.y+5, this.w-10, this.h-10);
+
+        // ডেকোরেশন
+        if (this.type === 'shelf') {
+            // ফুলদানি
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(this.x + this.w - 50, this.y - 50, 40, 50);
+            ctx.fillStyle = '#e91e63';
+            ctx.beginPath();
+            for(let i=0;i<3;i++){
+                ctx.arc(this.x+this.w-30 + i*15, this.y-60, 12,0,Math.PI*2);
+                ctx.fill();
             }
-            currentUser.balance = data.balance;
-            currentUser.referral_code = data.referral_code;
-            document.getElementById('user-balance').innerText = `৳${parseFloat(data.balance).toFixed(2)}`;
         }
+        if (this.type === 'clock') {
+            ctx.fillStyle = '#ffeb3b';
+            ctx.beginPath();
+            ctx.arc(this.x + this.w/2, this.y - 40, 50, 0, Math.PI*2);
+            ctx.fill();
+            ctx.strokeStyle = '#000'; ctx.lineWidth = 5;
+            ctx.beginPath(); ctx.moveTo(this.x+this.w/2, this.y-40);
+            ctx.lineTo(this.x+this.w/2, this.y-70); ctx.stroke();
+        }
+    }
+}
 
-        async function loadTasks() {
-            const { data: tasks } = await supabase.from('tasks').select('*').eq('is_active', true);
-            const { data: completions } = await supabase.from('user_task_completions').select('*').eq('user_id', currentUser.id);
+function initLevel() {
+    platforms = [];
+    // প্রথম টেবিল
+    platforms.push(new Platform(60, canvas.height - 100, 200, 'table'));
+    // পরের প্ল্যাটফর্ম
+    let lastY = canvas.height - 100;
+    for(let i = 1; i < 30; i++) {
+        lastY -= 140 + Math.random()*60;
+        const w = 120 + Math.random()*100;
+        const x = 30 + Math.random()*(canvas.width - w - 60);
+        const type = i%5===0 ? 'clock' : (i%3===0 ? 'shelf' : 'normal');
+        platforms.push(new Platform(x, lastY, w, type));
+    }
+    currentPlatform = platforms[0];
+    bottle = new Bottle();
+}
 
-            Object.values(activeTimers).forEach(clearInterval);
-            activeTimers = {};
+function drawBackground() {
+    // গ্রীন ওয়াল
+    const grad = ctx.createLinearGradient(0,0,0,canvas.height);
+    grad.addColorStop(0, '#81c784');
+    grad.addColorStop(1, '#4caf50');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
 
-            const container = document.getElementById('task-list');
-            if (!tasks || tasks.length === 0) { container.innerHTML = '<div style="text-align:center; padding:60px; color:#64748b;">কোনো টাস্ক নেই</div>'; return; }
+    // উইন্ডো
+    ctx.fillStyle = '#e3f2fd';
+    ctx.fillRect(30, 80, 120, 180);
+    ctx.fillStyle = '#90caf9';
+    ctx.fillRect(40, 90, 100, 160);
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 8;
+    ctx.strokeRect(40,170,140,170);
 
-            container.innerHTML = tasks.map(task => {
-                const completion = completions.find(c => c.task_id === task.id);
-                let buttonHtml;
-                let infoHtml = `পুরস্কার: <span style="color:var(--success); font-weight:bold;">৳${task.reward}</span>`;
+    // আরেকটা উইন্ডো
+    ctx.fillStyle = '#e3f2fd';
+    ctx.fillRect(canvas.width-150, 100, 100, 150);
+    ctx.fillStyle = '#90caf9';
+    ctx.fillRect(canvas.width-140, 110, 80, 130);
+}
 
-                if (completion) {
-                    const availableAt = new Date(new Date(completion.completed_at).getTime() + task.cooldown_hours * 60 * 60 * 1000);
-                    if (new Date() < availableAt) {
-                        infoHtml = `<div class="countdown" id="timer-task-${task.id}">লোড হচ্ছে...</div>`;
-                        buttonHtml = `<button class="task-btn start" disabled>অপেক্ষা করুন</button>`;
-                        startCooldown(task.id, availableAt);
-                    } else {
-                        buttonHtml = `<button class="task-btn start" onclick='startTask(this, ${task.id}, ${task.ads_to_watch}, ${task.reward}, ${task.post_ad_break_seconds})'>আবার শুরু করুন</button>`;
-                    }
+function play(id) {
+    const audio = document.getElementById(id);
+    audio.currentTime = 0;
+    audio.play().catch(()=>{});
+}
+
+function checkLanding() {
+    if (!bottle.flipping || bottle.vy <= 0) return false;
+    for(let i = platforms.indexOf(currentPlatform)+1; i<platforms.length; i++) {
+        const p = platforms[i];
+        if (bottle.y + bottle.h > p.y && bottle.y < p.y) {
+            if (bottle.x + 20 > p.x && bottle.x + 20 < p.x + p.w) {
+                const angle = Math.abs(bottle.rot % 360);
+                const perfect = angle < 25 || angle > 335;
+                bottle.flipping = false;
+                currentPlatform = p;
+                bottle.x = p.x + p.w/2 - 20;
+                bottle.y = p.y - bottle.h;
+                bottle.rot = 0; bottle.vx = bottle.vy = bottle.rotSpeed = 0;
+
+                if (perfect) {
+                    score += 50;
+                    coins += 20;
+                    play('perfect');
                 } else {
-                    buttonHtml = `<button class="task-btn start" onclick='startTask(this, ${task.id}, ${task.ads_to_watch}, ${task.reward}, ${task.post_ad_break_seconds})'>শুরু করুন</button>`;
+                    score += 10;
+                    coins += 5;
+                    play('land');
                 }
-                return `<div class="task-item" id="task-item-${task.id}">
-                            <div class="task-title">${task.title}</div>
-                            <div class="task-reward">${infoHtml}</div>
-                            ${buttonHtml}
-                        </div>`;
-            }).join('');
+                level = platforms.indexOf(p);
+                document.getElementById('level').textContent = level;
+                document.getElementById('coins').textContent = coins;
+                document.getElementById('progress.style.width = `${level*3.5}%`;
+                return true;
+            }
         }
-        
-        function startCooldown(taskId, availableAt) {
-            const timerElement = document.getElementById(`timer-task-${taskId}`);
-            if (!timerElement) return;
+    }
+    return false;
+}
 
-            const updateTimer = () => {
-                const distance = availableAt - new Date();
-                if (distance < 0) {
-                    clearInterval(activeTimers[taskId]);
-                    loadTasks(); return;
-                }
-                const hours = String(Math.floor((distance / (1000 * 60 * 60)) % 24)).padStart(2, '0');
-                const minutes = String(Math.floor((distance / 1000 / 60) % 60)).padStart(2, '0');
-                const seconds = String(Math.floor((distance / 1000) % 60)).padStart(2, '0');
-                timerElement.innerText = `আবার পাওয়া যাবে: ${hours}:${minutes}:${seconds} পর`;
-            };
-            
-            updateTimer(); // initial call
-            activeTimers[taskId] = setInterval(updateTimer, 1000);
-        }
+function gameLoop() {
+    if (!gameActive) return;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    drawBackground();
+    platforms.forEach(p => p.draw());
+    bottle.draw();
+    bottle.update();
 
-        async function fetchVPNSettings() {
-            const { data } = await supabase.from('settings').select('value').eq('key', 'vpn_check').single();
-            if (data) vpnSettings = data.value;
-        }
-
-        async function checkVPN() {
-            if (!vpnSettings || !vpnSettings.enabled) return true;
-            try {
-                const response = await fetch('https://ipapi.co/json/');
-                if (!response.ok) throw new Error('API Error');
-                const data = await response.json();
-                return !(!data || !data.country_code || !vpnSettings.allowed_countries.includes(data.country_code)) || (alert(`এই কাজটি করার জন্য আপনাকে অবশ্যই (${vpnSettings.allowed_countries.join(', ')}) দেশের VPN ব্যবহার করতে হবে।`), false);
-            } catch (error) { alert('VPN সনাক্ত করতে সমস্যা হচ্ছে।'); return false; }
-        }
-        
-        let currentTaskState = {};
-
-        async function startTask(btn, taskId, totalAds, reward, breakTime) {
-            if (!await checkVPN()) return;
-            document.querySelectorAll('.task-btn').forEach(b => b.disabled = true);
-            
-            currentTaskState = { btn, taskId, totalAds, adsWatched: 0, reward, breakTime: breakTime || 10 };
-            handleNextStep();
-        }
-
-        function handleNextStep() {
-            const { btn, totalAds, adsWatched } = currentTaskState;
-            if (adsWatched < totalAds) {
-                btn.innerText = `বিজ্ঞাপন দেখুন (${adsWatched + 1}/${totalAds})`;
-                btn.disabled = false;
-                btn.onclick = () => showAndProcessAd();
+    if (bottle.flipping) {
+        if (!checkLanding() && bottle.y > canvas.height + 100) {
+            lives--;
+            document.getElementById('lives').textContent = lives;
+            play('fail');
+            if (lives <= 0) {
+                gameActive = false;
+                document.getElementById('final-score').textContent = score;
+                document.getElementById('gameover-screen').classList.remove('hidden');
             } else {
-                btn.innerText = 'ক্লেইম করুন';
-                btn.disabled = false;
-                btn.classList.remove('start');
-                btn.classList.add('claim');
-                btn.onclick = () => claimReward();
+                bottle.reset();
             }
         }
+    }
 
-        async function showAndProcessAd() {
-            const { btn } = currentTaskState;
-            btn.disabled = true;
-            btn.innerText = 'বিজ্ঞাপন লোড হচ্ছে...';
-            
-            try {
-                await window.showGiga();
-                currentTaskState.adsWatched++;
-                startPostAdCountdown();
-            } catch (e) {
-                alert('বিজ্ঞাপন দেখাতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।');
-                handleNextStep();
-            }
-        }
+    // ট্র্যাজেক্টরি লাইন
+    if (dragging) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+        ctx.lineWidth = 6;
+        ctx.setLineDash([10,15]);
+        ctx.beginPath();
+        ctx.moveTo(bottle.x+20, bottle.y+50);
+        ctx.lineTo(startX, startY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
 
-        function startPostAdCountdown() {
-            const { btn, breakTime } = currentTaskState;
-            let countdown = breakTime;
-            btn.innerText = `অপেক্ষা করুন (${countdown}s)`;
+    requestAnimationFrame(gameLoop);
+}
 
-            const timer = setInterval(() => {
-                countdown--;
-                if (countdown > 0) {
-                    btn.innerText = `অপেক্ষা করুন (${countdown}s)`;
-                } else {
-                    clearInterval(timer);
-                    handleNextStep();
-                }
-            }, 1000);
-        }
-        
-        async function claimReward() {
-            const { btn, taskId, reward } = currentTaskState;
-            btn.disabled = true;
-            btn.innerText = 'চূড়ান্ত বিজ্ঞাপন দেখানো হচ্ছে...';
+// কন্ট্রোল
+canvas.addEventListener('pointerdown', e => {
+    if (!gameActive || bottle.flipping) return;
+    dragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+});
+canvas.addEventListener('pointermove', e => {
+    if (dragging) {
+        e.preventDefault();
+    }
+});
+canvas.addEventListener('pointerup', e => {
+    if (!dragging) return;
+    dragging = false;
+    const dx = startX - e.clientX;
+    const dy = startY - e.clientY;
+    const dist = Math.min(Math.hypot(dx,dy), 200);
+    if (dist > 30) {
+        const angle = Math.atan2(dy, dx);
+        bottle.launch(angle, dist);
+    }
+});
 
-            try {
-                await window.showGiga();
-            } catch (e) {
-                 alert('চূড়ান্ত বিজ্ঞাপন দেখাতে সমস্যা হয়েছে। ক্লেইম করতে আবার চেষ্টা করুন।');
-                 handleNextStep();
-                 return;
-            }
+// বাটন
+document.getElementById('play-btn').onclick = () => {
+    score = 0; lives = 3; level = 1; coins = 1000;
+    document.getElementById('coins.textContent = coins;
+    document.getElementById('lives').textContent = lives;
+    document.getElementById('level').textContent = level;
+    document.getElementById('progress').style.width = '0%';
+    document.getElementById('start-screen').classList.add('hidden');
+    initLevel();
+    gameActive = true;
+    gameLoop();
+};
+document.getElementById('restart-btn').onclick = () => location.reload();
+document.getElementById('pause-btn').onclick = () => alert('পজ করতে চাইলে ব্যাক বাটন চাপুন');
 
-            btn.innerText = 'ক্লেইম হচ্ছে...';
-            const { error: completionError } = await supabase.from('user_task_completions').upsert({ user_id: currentUser.id, task_id: taskId, completed_at: new Date().toISOString() }, { onConflict: 'user_id,task_id' });
-            if (completionError) {
-                alert('টাস্ক রেকর্ড করতে সমস্যা: ' + completionError.message);
-                loadTasks(); return;
-            }
-            const newBalance = currentUser.balance + parseFloat(reward);
-            const { error } = await supabase.from('users').update({ balance: newBalance }).eq('id', currentUser.id);
+// Canvas roundRect helper
+CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r) {
+    this.beginPath();
+    this.moveTo(x+r, y);
+    this.arcTo(x+w, y, x+w, y+h, r);
+    this.arcTo(x+w, y+h, x, y+h, r);
+    this.arcTo(x, y+h, x, y, r);
+    this.arcTo(x, y, x+w, y, r);
+    this.closePath();
+    return this;
+};
 
-            if (!error) {
-                await loadUser();
-                confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-            } else { 
-                alert('ক্লেইম করতে সমস্যা হয়েছে: ' + error.message);
-                await supabase.from('user_task_completions').delete().eq('user_id', currentUser.id).eq('task_id', taskId);
-            }
-            loadTasks();
-        };
-
-        function listenForTaskChanges() {
-            supabase.channel('public:tasks').on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, payload => { loadTasks(); }).subscribe();
-        }
-
-        async function openWithdrawModal() {
-            const { data: methods, error } = await supabase.from('withdrawal_methods').select('id, name').eq('is_active', true).order('id');
-            if (error || !methods) {
-                alert('পেমেন্ট মেথড লোড করা যায়নি।');
-                return;
-            }
-            
-            const { data: setting } = await supabase.from('settings').select('value').eq('key', 'fixed_withdrawal_amount').single();
-            const fixedAmount = setting ? setting.value.amount : null;
-
-            if (!fixedAmount) {
-                alert('উত্তোলনের পরিমাণ নির্ধারণ করা হয়নি। অনুগ্রহ করে সাপোর্টে যোগাযোগ করুন।');
-                return;
-            }
-
-            // Fix for duplicate methods - filter unique names
-            const uniqueMethods = Array.from(new Map(methods.map(item => [item.name, item])).values());
-            const methodsOptions = uniqueMethods.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-            
-            const modalHtml = `<div class="modal-content"><div style="background:var(--primary); color:white; padding:20px; text-align:center; font-size:20px; border-radius:24px 24px 0 0;">টাকা উইথড্র করুন</div><div style="padding:24px;"><select id="withdraw-method" style="width:100%; padding:14px; border-radius:12px; margin-bottom:16px; border:1px solid #ddd;">${methodsOptions}</select><input type="text" id="withdraw-account" placeholder="মোবাইল নম্বর" style="width:100%; padding:14px; border-radius:12px; margin-bottom:16px; border:1px solid #ddd;"><input type="number" id="withdraw-amount" value="${fixedAmount}" readonly style="width:100%; padding:14px; border-radius:12px; margin-bottom:24px; border:1px solid #ddd; background-color: #f0f0f0;"><div style="display:flex; gap:12px;"><button class="btn" style="background:#e2e8f0;" onclick="closeModal()">বাতিল</button><button class="btn" style="background:var(--success);" onclick="submitWithdrawRequest(this, ${fixedAmount})">সাবমিট</button></div></div></div>`;
-            document.getElementById('appModal').innerHTML = modalHtml;
-            document.getElementById('appModal').style.display = 'flex';
-        }
-        
-        async function submitWithdrawRequest(btn, fixedAmount) {
-            const amount = fixedAmount;
-            const account = document.getElementById('withdraw-account').value;
-            const methodId = document.getElementById('withdraw-method').value;
-            if (!account || !amount || !methodId) return alert('সঠিক তথ্য দিন');
-            if (amount > currentUser.balance) return alert('আপনার পর্যাপ্ত ব্যালেন্স নেই');
-            btn.disabled = true; btn.innerText = 'প্রসেসিং...';
-            const { error: insertError } = await supabase.from('withdrawals').insert({ user_id: currentUser.id, method_id: methodId, account_details: account, amount: amount, status: 'pending' });
-            if (insertError) {
-                btn.disabled = false; btn.innerText = 'সাবমিট';
-                return alert('রিকোয়েস্ট পাঠাতে সমস্যা: ' + insertError.message);
-            }
-            const newBalance = currentUser.balance - amount;
-            const { error: updateError } = await supabase.from('users').update({ balance: newBalance }).eq('id', currentUser.id);
-            if (updateError) {
-                alert('রিকোয়েস্ট পাঠানো হয়েছে কিন্তু ব্যালেন্স আপডেট হয়নি। সাপোর্টে যোগাযোগ করুন।');
-            } else {
-                currentUser.balance = newBalance;
-                document.getElementById('user-balance').innerText = `৳${newBalance.toFixed(2)}`;
-                alert('উইথড্র রিকোয়েস্ট সফলভাবে পাঠানো হয়েছে!');
-            }
-            closeModal();
-        }
-
-        async function showHistoryModal() {
-            const { data } = await supabase.from('withdrawals').select('*, withdrawal_methods(name)').eq('user_id', currentUser.id).order('requested_at', { ascending: false });
-            let historyHtml = '<div style="padding:20px;"><h3 style="text-align:center; margin-bottom:20px;">উইথড্র হিস্টোরি</h3>';
-            if (!data || data.length === 0) { historyHtml += '<p style="text-align:center; color:#666;">কোনো রিকোয়েস্ট নেই</p>'; }
-            else { data.forEach(w => { historyHtml += `<div style="background:#f9f9f9; padding:12px; border-radius:12px; margin-bottom:10px;"><strong>৳${w.amount} → ${w.withdrawal_methods?.name || 'N/A'}</strong><br><small>${new Date(w.requested_at).toLocaleString('bn-BD')}</small><span style="float:right; font-weight:bold; color:${w.status==='paid'?'green':(w.status==='rejected'?'red':'orange')}">${w.status==='paid'?'পেইড':(w.status==='rejected'?'রিজেক্টেড':'পেন্ডিং')}</span></div>`; }); }
-            historyHtml += '<button class="btn" style="width:100%; margin-top:20px; background:#e2e8f0;" onclick="closeModal()">বন্ধ করুন</button></div>';
-            document.getElementById('appModal').innerHTML = `<div class="modal-content">${historyHtml}</div>`;
-            document.getElementById('appModal').style.display = 'flex';
-        }
-
-        async function showReferralModal() {
-            const { data } = await supabase.from('settings').select('value').eq('key', 'bot_username').single();
-            const botUsername = data?.value?.username || 'YOUR_BOT_USERNAME';
-            const referralLink = `https://t.me/${botUsername}?start=${currentUser.referral_code}`;
-            const modalHtml = `
-                <div class="modal-content" style="text-align: center; padding: 30px;">
-                    <h3>আপনার বন্ধুদের রেফার করুন!</h3>
-                    <p style="margin: 15px 0; color: #555;">আপনার রেফারেল লিঙ্ক বন্ধুদের সাথে শেয়ার করুন। প্রতি সফল রেফারেলে বোনাস পান!</p>
-                    <input type="text" value="${referralLink}" id="referralLinkInput" readonly style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; text-align: center; font-size: 16px; margin-bottom: 15px;">
-                    <button class="btn" style="background: var(--primary); color: white; width: 100%;" onclick="copyReferralLink()">লিঙ্ক কপি করুন</button>
-                    <button class="btn" style="background: #e2e8f0; width: 100%; margin-top: 10px;" onclick="closeModal()">বন্ধ করুন</button>
-                </div>`;
-            document.getElementById('appModal').innerHTML = modalHtml;
-            document.getElementById('appModal').style.display = 'flex';
-        }
-
-        function copyReferralLink() {
-            const copyText = document.getElementById("referralLinkInput");
-            copyText.select();
-            copyText.setSelectionRange(0, 99999);
-            navigator.clipboard.writeText(copyText.value);
-            alert("রেফারেল লিঙ্ক কপি করা হয়েছে!");
-        }
-        
-        function closeModal() { document.getElementById('appModal').style.display = 'none'; }
-    </script>
+// শুরু
+initLevel();
+</script>
 </body>
 </html>
