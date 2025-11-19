@@ -3,185 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Quiz & Earn BD</title>
+    <title>Quiz & Earn Pro</title>
     
-    <!-- ফন্ট এবং আইকন -->
+    <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- প্রয়োজনীয় স্ক্রিপ্ট -->
+
+    <!-- Scripts -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Gigapub Ads Script -->
+    <!-- Gigapub Ads -->
     <script src="https://ad.gigapub.tech/script?id=4203"></script>
 
     <style>
         :root {
             --primary: #6C5CE7;
-            --primary-dark: #4834d4;
-            --secondary: #00b894;
+            --accent: #00cec9;
             --bg: #dfe6e9;
-            --card-bg: #ffffff;
+            --card: #ffffff;
             --text: #2d3436;
+            --gold: #ffd700;
         }
 
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body {
             font-family: 'Hind Siliguri', sans-serif;
-            background-color: var(--bg);
+            background: var(--bg);
             margin: 0; padding: 0;
+            padding-bottom: 80px; /* Space for bottom nav */
             color: var(--text);
             overflow-x: hidden;
-            padding-bottom: 80px;
         }
 
-        /* --- Header 3D Design --- */
+        /* --- 3D Header --- */
         .header {
             background: linear-gradient(135deg, #6C5CE7, #a29bfe);
             padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom-left-radius: 25px;
-            border-bottom-right-radius: 25px;
-            box-shadow: 0 8px 15px rgba(108, 92, 231, 0.3);
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            box-shadow: 0 10px 20px rgba(108, 92, 231, 0.3);
             color: white;
-            position: sticky;
-            top: 0; z-index: 100;
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100;
         }
-        .user-profile { display: flex; align-items: center; gap: 10px; }
-        .avatar { 
+        .user-info { display: flex; align-items: center; gap: 10px; }
+        .user-avatar { 
             width: 45px; height: 45px; border-radius: 50%; 
-            border: 3px solid white; background: #eee; object-fit: cover;
+            border: 3px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            object-fit: cover;
         }
-        .user-details h3 { margin: 0; font-size: 16px; font-weight: 700; }
-        .user-details p { margin: 0; font-size: 11px; opacity: 0.8; }
-        
-        .balance-card {
-            background: rgba(255, 255, 255, 0.25);
-            padding: 8px 15px;
-            border-radius: 15px;
+        .balance-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px; border-radius: 20px;
             border: 1px solid rgba(255,255,255,0.4);
             backdrop-filter: blur(5px);
-            display: flex; align-items: center; gap: 8px;
-            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
-            cursor: pointer;
-            transition: transform 0.1s;
+            font-weight: bold; display: flex; align-items: center; gap: 5px;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
         }
-        .balance-card:active { transform: scale(0.95); box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
-        .coin-icon { color: #F1C40F; text-shadow: 0 2px 2px rgba(0,0,0,0.2); font-size: 18px; }
 
-        /* --- Categories 3D Grid --- */
-        .container { padding: 20px; }
-        .section-title {
-            font-size: 18px; font-weight: 700; margin: 20px 0 15px;
-            border-left: 5px solid var(--primary); padding-left: 10px;
+        /* --- Navigation --- */
+        .pages { display: none; animation: fadeIn 0.3s; padding: 20px; }
+        .pages.active { display: block; }
+        @keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
+
+        /* --- Home Grid --- */
+        .quiz-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
+        .quiz-card {
+            height: 120px; border-radius: 20px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: white; font-weight: bold; font-size: 16px;
+            box-shadow: 0 8px 0 rgba(0,0,0,0.15), 0 15px 20px rgba(0,0,0,0.1);
+            transition: transform 0.1s; cursor: pointer; position: relative; overflow: hidden;
         }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .quiz-card:active { transform: translateY(8px); box-shadow: 0 0 0 rgba(0,0,0,0.15); }
+        .quiz-card i { font-size: 35px; margin-bottom: 10px; }
         
-        .card-3d {
-            height: 120px;
-            border-radius: 20px;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            color: white; text-align: center;
-            position: relative;
-            cursor: pointer;
-            transition: transform 0.1s;
-            box-shadow: 0 6px 0 rgba(0,0,0,0.2), 0 10px 10px rgba(0,0,0,0.1);
-        }
-        .card-3d:active {
-            transform: translateY(6px);
-            box-shadow: 0 0 0 rgba(0,0,0,0.2);
-        }
-        .card-3d i { font-size: 35px; margin-bottom: 8px; }
-        
+        /* Colors */
         .bg-bd { background: linear-gradient(135deg, #00b894, #00cec9); border-bottom: 6px solid #008b70; }
         .bg-int { background: linear-gradient(135deg, #0984e3, #74b9ff); border-bottom: 6px solid #065fa3; }
         .bg-gk { background: linear-gradient(135deg, #fdcb6e, #e17055); border-bottom: 6px solid #d35400; }
         .bg-isl { background: linear-gradient(135deg, #2ecc71, #27ae60); border-bottom: 6px solid #1e8449; }
 
-        /* --- 3D Spin Button Section --- */
-        .spin-trigger-section {
-            margin-top: 30px;
-            text-align: center;
+        /* --- Leaderboard 3D Design --- */
+        .leaderboard-item {
+            background: #fff;
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 15px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 5px 0 #b2bec3, 0 10px 10px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
         }
-        .spin-3d-btn {
-            background: linear-gradient(135deg, #FF7675, #D63031);
-            color: white;
-            border: none;
-            width: 100%;
-            padding: 20px;
-            font-size: 22px;
-            font-weight: 700;
-            border-radius: 25px;
-            cursor: pointer;
-            box-shadow: 0 8px 0 #b71540, 0 15px 20px rgba(0,0,0,0.2);
-            transition: all 0.1s;
-            display: flex; align-items: center; justify-content: center; gap: 15px;
+        .leaderboard-item:hover { transform: translateY(-3px); }
+        .rank-badge {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: var(--bg); display: flex; justify-content: center; align-items: center;
+            font-weight: bold; color: var(--primary); margin-right: 10px;
         }
-        .spin-3d-btn:active {
-            transform: translateY(8px);
-            box-shadow: 0 0 0 #b71540;
-        }
+        .lb-user { display: flex; align-items: center; gap: 10px; flex-grow: 1; }
+        .lb-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); }
+        .top-1 { border: 2px solid #ffd700; background: linear-gradient(to right, #fff, #fffdf0); }
+        .top-1 .rank-badge { background: #ffd700; color: #fff; }
 
-        /* --- Modal Styles --- */
-        .modal {
-            display: none; position: fixed; z-index: 1000;
-            left: 0; top: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.8);
-            justify-content: center; align-items: center;
+        /* --- Profile 3D Design --- */
+        .profile-card {
+            background: linear-gradient(135deg, #6C5CE7, #81ecec);
+            padding: 30px; border-radius: 25px; text-align: center; color: white;
+            box-shadow: 0 10px 25px rgba(108, 92, 231, 0.4);
+            margin-bottom: 20px;
         }
-        .modal-content {
-            background: white; width: 90%; max-width: 400px;
-            border-radius: 20px; padding: 20px; text-align: center;
-            position: relative; animation: popIn 0.3s;
+        .profile-big-img {
+            width: 100px; height: 100px; border-radius: 50%;
+            border: 5px solid rgba(255,255,255,0.5); margin-bottom: 10px;
+            object-fit: cover;
         }
-        @keyframes popIn { from {transform: scale(0.5); opacity:0;} to {transform: scale(1); opacity:1;} }
-        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #aaa; }
-
-        /* --- Spin Wheel UI --- */
-        .wheel-wrapper { width: 250px; height: 250px; margin: 20px auto; position: relative; }
+        .stats-row { display: flex; justify-content: space-around; margin-top: 20px; background: rgba(0,0,0,0.1); padding: 10px; border-radius: 15px; }
+        
+        /* --- Spin Wheel --- */
+        .wheel-container { width: 280px; height: 280px; margin: 20px auto; position: relative; }
         .wheel {
             width: 100%; height: 100%; border-radius: 50%;
-            border: 8px solid #6C5CE7;
             background: conic-gradient(#ff7675 0deg 60deg, #74b9ff 60deg 120deg, #55efc4 120deg 180deg, #ffeaa7 180deg 240deg, #a29bfe 240deg 300deg, #fd79a8 300deg 360deg);
+            border: 8px solid white; box-shadow: 0 0 15px rgba(0,0,0,0.2);
             transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
         }
-        .arrow {
+        .stopper {
             position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
             width: 0; height: 0; border-left: 15px solid transparent;
-            border-right: 15px solid transparent; border-top: 30px solid #2d3436;
-            z-index: 10; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));
+            border-right: 15px solid transparent; border-top: 35px solid #2d3436; z-index: 10;
         }
-        .spin-action-btn {
-            background: var(--primary); color: white; padding: 12px 40px;
-            border: none; border-radius: 50px; font-size: 18px; font-weight: bold;
-            box-shadow: 0 5px 0 var(--primary-dark); cursor: pointer;
+        .spin-btn {
+            background: linear-gradient(to bottom, #ff7675, #d63031);
+            color: white; border: none; padding: 15px 50px; border-radius: 50px;
+            font-size: 20px; font-weight: bold; margin-top: 20px;
+            box-shadow: 0 6px 0 #b71540; cursor: pointer; width: 80%;
         }
-        .spin-action-btn:active { transform: translateY(5px); box-shadow: none; }
-        .spin-action-btn:disabled { background: #b2bec3; box-shadow: none; transform: none; }
+        .spin-btn:active { transform: translateY(6px); box-shadow: none; }
 
-        /* --- Quiz UI --- */
-        .option-btn {
-            display: block; width: 100%; padding: 12px; margin: 10px 0;
-            background: #f1f2f6; border: 2px solid #dcdde1; border-radius: 10px;
-            font-size: 16px; font-weight: 600; color: #2d3436; cursor: pointer;
+        /* --- Bottom Nav --- */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: white; height: 70px; display: flex; justify-content: space-around;
+            align-items: center; border-top-left-radius: 20px; border-top-right-radius: 20px;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 999;
         }
-        .option-btn.correct { background: #55efc4; color: white; border-color: #00b894; }
-        .option-btn.wrong { background: #ff7675; color: white; border-color: #d63031; }
-        
-        /* --- Withdraw Form --- */
-        .input-field {
-            width: 100%; padding: 12px; margin: 10px 0;
-            border: 2px solid #dfe6e9; border-radius: 10px; font-family: inherit;
+        .nav-item {
+            text-align: center; color: #b2bec3; font-size: 12px; cursor: pointer;
+            transition: 0.2s;
         }
-        .submit-btn {
-            width: 100%; padding: 15px; background: #00b894; color: white;
-            border: none; border-radius: 10px; font-weight: bold; font-size: 16px;
-        }
+        .nav-item i { font-size: 24px; margin-bottom: 5px; display: block; }
+        .nav-item.active { color: var(--primary); transform: translateY(-5px); }
+
+        /* --- Modals --- */
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; justify-content:center; align-items:center; }
+        .modal-content { background: white; width: 90%; max-width: 350px; padding: 20px; border-radius: 20px; text-align: center; }
+        .quiz-option { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #dfe6e9; border-radius: 10px; background: #f5f6fa; font-size: 16px; }
+        .quiz-option.correct { background: #55efc4; color: white; border-color: #00b894; }
+        .quiz-option.wrong { background: #ff7675; color: white; border-color: #d63031; }
 
     </style>
 </head>
@@ -189,395 +168,378 @@
 
     <!-- Header -->
     <div class="header">
-        <div class="user-profile">
-            <img src="https://via.placeholder.com/45" id="userImg" class="avatar" alt="Profile">
-            <div class="user-details">
-                <h3 id="userName">অপেক্ষা করুন...</h3>
-                <p id="userID">ID: Loading...</p>
+        <div class="user-info">
+            <img src="https://via.placeholder.com/50" id="headerImg" class="user-avatar">
+            <div>
+                <div style="font-weight: bold; font-size: 14px;" id="headerName">Loading...</div>
+                <div style="font-size: 10px; opacity: 0.8;">ID: <span id="headerId">...</span></div>
             </div>
         </div>
-        <div class="balance-card" onclick="openModal('withdrawModal')">
-            <i class="fas fa-coins coin-icon"></i>
-            <span id="balanceDisplay" style="font-weight: 700;">0</span>
+        <div class="balance-badge">
+            <i class="fas fa-coins" style="color: var(--gold);"></i>
+            <span id="headerBalance">0</span>
         </div>
     </div>
 
-    <div class="container">
-        <!-- Quiz Section -->
-        <div class="section-title">কুইজ ক্যাটাগরি</div>
-        <div class="grid">
-            <div class="card-3d bg-bd" onclick="startQuiz('bangladesh')">
-                <i class="fas fa-flag"></i> <span>বাংলাদেশ</span>
-            </div>
-            <div class="card-3d bg-int" onclick="startQuiz('international')">
-                <i class="fas fa-globe-americas"></i> <span>আন্তর্জাতিক</span>
-            </div>
-            <div class="card-3d bg-gk" onclick="startQuiz('gk')">
-                <i class="fas fa-brain"></i> <span>সাধারণ জ্ঞান</span>
-            </div>
-            <div class="card-3d bg-isl" onclick="startQuiz('islamic')">
-                <i class="fas fa-mosque"></i> <span>ইসলামিক</span>
+    <!-- HOME PAGE -->
+    <div id="home" class="pages active">
+        <h3 style="margin-bottom: 15px; color: var(--primary);">কুইজ ক্যাটাগরি</h3>
+        <div class="quiz-grid">
+            <div class="quiz-card bg-bd" onclick="startQuiz('bangladesh')"><i class="fas fa-flag"></i>বাংলাদেশ</div>
+            <div class="quiz-card bg-int" onclick="startQuiz('international')"><i class="fas fa-globe"></i>আন্তর্জাতিক</div>
+            <div class="quiz-card bg-gk" onclick="startQuiz('gk')"><i class="fas fa-brain"></i>সাধারণ জ্ঞান</div>
+            <div class="quiz-card bg-isl" onclick="startQuiz('islamic')"><i class="fas fa-mosque"></i>ইসলামিক</div>
+        </div>
+        
+        <!-- 3D Spin Banner -->
+        <div style="margin-top: 30px; background: linear-gradient(45deg, #ff9ff3, #feca57); padding: 20px; border-radius: 20px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.1); cursor: pointer;" onclick="navTo('spin')">
+            <h2 style="margin: 0; color: white; text-shadow: 0 2px 5px rgba(0,0,0,0.2);">লাকি স্পিন হুইল</h2>
+            <p style="margin: 5px 0; color: #fff;">স্পিন করুন এবং জিতুন!</p>
+        </div>
+    </div>
+
+    <!-- SPIN PAGE -->
+    <div id="spin" class="pages">
+        <h3 style="text-align: center;">লাকি স্পিন</h3>
+        <p style="text-align: center; color: #636e72;">আজকের স্পিন বাকি: <span id="spinCount" style="font-weight: bold; color: var(--primary);">0</span></p>
+        <div class="wheel-container">
+            <div class="stopper"></div>
+            <div class="wheel" id="wheel"></div>
+        </div>
+        <center><button class="spin-btn" id="spinTrigger" onclick="doSpin()">SPIN NOW</button></center>
+    </div>
+
+    <!-- LEADERBOARD PAGE -->
+    <div id="leaderboard" class="pages">
+        <h3 style="text-align: center; color: var(--primary);">সেরা ১০ জন বিজয়ী</h3>
+        <div id="leaderboardList">
+            <p style="text-align:center;">লোড হচ্ছে...</p>
+        </div>
+    </div>
+
+    <!-- PROFILE PAGE -->
+    <div id="profile" class="pages">
+        <div class="profile-card">
+            <img src="" id="profileImg" class="profile-big-img">
+            <h2 id="profileName" style="margin: 0;">Name</h2>
+            <div class="stats-row">
+                <div>
+                    <div style="font-size: 20px; font-weight: bold;" id="profileBalanceDisp">0</div>
+                    <div style="font-size: 12px;">কয়েন</div>
+                </div>
+                <div>
+                    <div style="font-size: 20px; font-weight: bold;" id="profileQuizCount">0</div>
+                    <div style="font-size: 12px;">কুইজ খেলেছেন</div>
+                </div>
             </div>
         </div>
 
-        <!-- Spin Button Section -->
-        <div class="spin-trigger-section">
-            <button class="spin-3d-btn" onclick="openSpinModal()">
-                <i class="fas fa-dharmachakra"></i> লাকি স্পিন হুইল
-            </button>
-            <p style="margin-top: 10px; color: #636e72; font-size: 14px;">
-                আজকের স্পিন বাকি: <span id="spinsLeftDisplay" style="font-weight:bold; color: #d63031;">0</span> টি
-            </p>
+        <h4 style="margin-bottom: 10px;">টাকা উত্তোলন করুন</h4>
+        <div style="background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+            <select id="wMethod" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 10px;">
+                <option value="bkash">বিকাশ</option>
+                <option value="nagad">নগদ</option>
+                <option value="rocket">রকেট</option>
+            </select>
+            <input type="number" id="wAmount" placeholder="পরিমাণ (মিনিমাম ৩০০০)" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 10px;">
+            <input type="text" id="wNumber" placeholder="মোবাইল নাম্বার" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 10px;">
+            <button onclick="submitWithdraw()" style="width: 100%; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 10px; font-weight: bold;">রিকোয়েস্ট পাঠান</button>
         </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="navTo('home', this)"><i class="fas fa-home"></i>হোম</div>
+        <div class="nav-item" onclick="navTo('spin', this)"><i class="fas fa-dharmachakra"></i>স্পিন</div>
+        <div class="nav-item" onclick="navTo('leaderboard', this); loadLeaderboard();"><i class="fas fa-trophy"></i>লিডারবোর্ড</div>
+        <div class="nav-item" onclick="navTo('profile', this)"><i class="fas fa-user"></i>প্রোফাইল</div>
     </div>
 
     <!-- Quiz Modal -->
     <div id="quizModal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('quizModal')">&times;</span>
-            <h4 id="quizTitle" style="color: var(--primary);">প্রশ্ন</h4>
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
-                <h3 id="questionText">Loading...</h3>
-            </div>
-            <div id="optionsContainer"></div>
-            <p style="font-size: 12px; color: #aaa;">প্রশ্ন <span id="qCount">0</span>/10</p>
-        </div>
-    </div>
-
-    <!-- Spin Modal -->
-    <div id="spinModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('spinModal')">&times;</span>
-            <h3>লাকি স্পিন</h3>
-            <div class="wheel-wrapper">
-                <div class="arrow"></div>
-                <div class="wheel" id="wheel"></div>
-            </div>
-            <button id="doSpinBtn" class="spin-action-btn" onclick="performSpin()">স্পিন করুন</button>
-        </div>
-    </div>
-
-    <!-- Withdraw Modal -->
-    <div id="withdrawModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('withdrawModal')">&times;</span>
-            <h3>পেমেন্ট মেথড</h3>
-            <p>ব্যালেন্স: <span id="wBalance" style="color:var(--secondary); font-weight:bold;">0</span> কয়েন</p>
-            
-            <select id="wMethod" class="input-field">
-                <option value="bkash">বিকাশ</option>
-                <option value="nagad">নগদ</option>
-                <option value="rocket">রকেট</option>
-                <option value="recharge">মোবাইল রিচার্জ</option>
-            </select>
-            <input type="number" id="wAmount" class="input-field" placeholder="পরিমাণ (মিনিমাম ৩০০০)">
-            <input type="number" id="wNumber" class="input-field" placeholder="নাম্বার দিন">
-            
-            <button class="submit-btn" onclick="submitWithdraw()">রিকোয়েস্ট পাঠান</button>
+            <h3 id="qText">Question?</h3>
+            <div id="qOptions"></div>
+            <div style="margin-top: 10px; font-size: 12px;">প্রশ্ন: <span id="qIndex">1</span>/10</div>
         </div>
     </div>
 
     <script>
-        // --- কনফিগারেশন ---
+        // --- CONFIGURATION ---
         const SUPABASE_URL = 'https://uzrxrnqdozmuycxqtwkg.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6cnhybnFkb3ptdXljeHF0d2tnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0NzE1NzcsImV4cCI6MjA3OTA0NzU3N30.QttTbmRVeC7RsdHLJKIOccb4qTVCUEleZk3sIwHVVqQ';
         
-        // --- ইনিশিয়ালাইজেশন ---
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         const tg = window.Telegram.WebApp;
-        tg.expand(); // অ্যাপ ফুল স্ক্রিন করা
+        tg.expand();
 
-        // গ্লোবাল ভেরিয়েবল
-        let currentUser = null;
-        let currentBalance = 0;
-        let dailySpins = 0;
-        let quizScore = 0;
+        // Variables
+        let user = { id: 0, first_name: 'Guest', photo_url: '' };
+        let dbUser = null;
+        let currentQuiz = [];
         let quizIndex = 0;
-        let activeQuiz = [];
+        let score = 0;
 
-        // --- অ্যাপ শুরু (Start App) ---
-        async function initApp() {
-            // ১. টেলিগ্রাম ইউজার ডাটা নেওয়া
-            let tgUser = tg.initDataUnsafe?.user;
-
-            // ডিবাগিং বা ব্রাউজারে টেস্টিং এর জন্য ডামি ডাটা (যদি টেলিগ্রামে না থাকে)
-            if (!tgUser) {
-                console.warn("Telegram User not found. Using demo user.");
-                tgUser = { id: 11223344, first_name: "Test", username: "User", photo_url: "https://via.placeholder.com/50" };
+        // --- INIT APP ---
+        async function init() {
+            // Telegram Data Fetching
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                user = tg.initDataUnsafe.user;
+            } else {
+                // Demo Data for Browser Testing
+                user = { id: 12345, first_name: 'Demo User', photo_url: 'https://via.placeholder.com/150' };
             }
 
-            // UI আপডেট
-            document.getElementById('userName').innerText = tgUser.first_name;
-            document.getElementById('userID').innerText = "ID: " + tgUser.id;
-            if (tgUser.photo_url) document.getElementById('userImg').src = tgUser.photo_url;
+            // Set UI Info
+            document.getElementById('headerName').innerText = user.first_name;
+            document.getElementById('headerId').innerText = user.id;
+            document.getElementById('profileName').innerText = user.first_name;
+            
+            // Profile Photo Logic
+            const photo = user.photo_url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+            document.getElementById('headerImg').src = photo;
+            document.getElementById('profileImg').src = photo;
 
-            // ২. ডাটাবেস চেক করা বা ইউজার তৈরি করা
-            await syncUserWithDB(tgUser);
+            await syncUser();
         }
 
-        // --- ডাটাবেস সিঙ্ক (Sync User) ---
-        async function syncUserWithDB(tgUser) {
-            // ইউজার খোঁজা
-            let { data: user, error } = await supabase
-                .from('users')
-                .select('*')
-                .eq('telegram_id', tgUser.id)
-                .single();
+        // --- DATABASE SYNC ---
+        async function syncUser() {
+            let { data, error } = await supabase.from('users').select('*').eq('telegram_id', user.id).single();
 
             const today = new Date().toISOString().split('T')[0];
 
-            if (!user) {
-                // নতুন ইউজার তৈরি
-                const { data: newUser, error: insertError } = await supabase
-                    .from('users')
-                    .insert([{ 
-                        telegram_id: tgUser.id, 
-                        first_name: tgUser.first_name, 
-                        username: tgUser.username,
-                        spins_left: 10,
-                        last_active_date: today
-                    }])
-                    .select()
-                    .single();
-                
-                if (insertError) console.error(insertError);
-                user = newUser;
+            if (!data) {
+                // New User
+                const { data: newUser } = await supabase.from('users').insert([{
+                    telegram_id: user.id,
+                    first_name: user.first_name,
+                    photo_url: user.photo_url || '',
+                    last_active_date: today
+                }]).select().single();
+                dbUser = newUser;
             } else {
-                // ডেট চেক (নতুন দিন হলে স্পিন রিসেট)
-                if (user.last_active_date !== today) {
-                    await supabase.from('users').update({ spins_left: 10, last_active_date: today }).eq('telegram_id', tgUser.id);
-                    user.spins_left = 10;
+                // Existing User - Check Daily Spin Reset
+                if (data.last_active_date !== today) {
+                    await supabase.from('users').update({ spins_left: 10, last_active_date: today }).eq('telegram_id', user.id);
+                    data.spins_left = 10;
                 }
+                // Update Photo/Name if changed
+                if (data.photo_url !== user.photo_url) {
+                    await supabase.from('users').update({ photo_url: user.photo_url, first_name: user.first_name }).eq('telegram_id', user.id);
+                }
+                dbUser = data;
             }
-
-            // ডাটা সেট করা
-            currentUser = user;
-            currentBalance = user.balance || 0;
-            dailySpins = user.spins_left;
-            
             updateUI();
         }
 
         function updateUI() {
-            document.getElementById('balanceDisplay').innerText = currentBalance;
-            document.getElementById('wBalance').innerText = currentBalance;
-            document.getElementById('spinsLeftDisplay').innerText = dailySpins;
+            if(!dbUser) return;
+            document.getElementById('headerBalance').innerText = dbUser.balance;
+            document.getElementById('profileBalanceDisp').innerText = dbUser.balance;
+            document.getElementById('profileQuizCount').innerText = dbUser.quizzes_played;
+            document.getElementById('spinCount').innerText = dbUser.spins_left;
         }
 
-        // --- কুইজ লজিক ---
-        const questionsDB = {
+        // --- NAVIGATION ---
+        function navTo(pageId, el) {
+            document.querySelectorAll('.pages').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            
+            if(el) {
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                el.classList.add('active');
+            }
+        }
+
+        // --- LEADERBOARD LOGIC ---
+        async function loadLeaderboard() {
+            const list = document.getElementById('leaderboardList');
+            list.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> লোড হচ্ছে...</div>';
+
+            const { data, error } = await supabase
+                .from('users')
+                .select('first_name, balance, photo_url')
+                .order('balance', { ascending: false })
+                .limit(10);
+
+            if (data) {
+                list.innerHTML = '';
+                data.forEach((u, index) => {
+                    const photo = u.photo_url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                    const rankClass = index === 0 ? 'top-1' : '';
+                    
+                    const html = `
+                    <div class="leaderboard-item ${rankClass}">
+                        <div class="lb-user">
+                            <div class="rank-badge">${index + 1}</div>
+                            <img src="${photo}" class="lb-img">
+                            <div style="font-weight:600;">${u.first_name}</div>
+                        </div>
+                        <div style="font-weight:bold; color: var(--primary);">
+                            ${u.balance} <i class="fas fa-coins" style="font-size:12px; color:#ffd700;"></i>
+                        </div>
+                    </div>`;
+                    list.innerHTML += html;
+                });
+            }
+        }
+
+        // --- QUIZ LOGIC ---
+        const quizDB = {
             bangladesh: [
-                { q: "বাংলাদেশের জাতীয় ফুল কোনটি?", o: ["গোলাপ", "শাপলা", "জবা", "পদ্ম"], a: 1 },
-                { q: "বিজয় দিবস কবে?", o: ["২৬ মার্চ", "১৬ ডিসেম্বর", "২১ ফেব্রুয়ারি", "১ মে"], a: 1 },
-                { q: "পদ্মা সেতুর দৈর্ঘ্য কত?", o: ["৬.১৫ কিমি", "৫.৫ কিমি", "৭ কিমি", "৪.৮ কিমি"], a: 0 },
-                { q: "বাংলাদেশের রাজধানী কী?", o: ["খুলনা", "বরিশাল", "ঢাকা", "সিলেট"], a: 2 },
-                { q: "জাতীয় কবি কে?", o: ["নজরুল ইসলাম", "রবীন্দ্রনাথ", "জসীমউদ্দীন", "জীবনানন্দ"], a: 0 },
-                { q: "সুন্দরবন কোন জেলায়?", o: ["খুলনা", "ঢাকা", "রাজশাহী", "রংপুর"], a: 0 },
-                { q: "টাকার নোটে কার ছবি থাকে?", o: ["বাঘ", "বঙ্গবন্ধু", "হরিণ", "দোয়েল"], a: 1 },
-                { q: "বাংলাদেশের সবচেয়ে বড় জেলা কোনটি?", o: ["ঢাকা", "রাঙ্গামাটি", "কুমিল্লা", "বগুড়া"], a: 1 },
-                { q: "জাতীয় খেলা কোনটি?", o: ["ক্রিকেট", "ফুটবল", "হাডুডু", "হকি"], a: 2 },
-                { q: "মুক্তিযুদ্ধ কত সালে হয়?", o: ["১৯৫২", "১৯৭১", "১৯৯০", "১৯৪৭"], a: 1 }
+                { q: "বাংলাদেশের রাজধানী?", o: ["ঢাকা", "খুলনা", "সিলেট", "রাজশাহী"], a: 0 },
+                { q: "বিজয় দিবস কবে?", o: ["২৬ মার্চ", "১৬ ডিসেম্বর", "২১ ফেব্রুয়ারি"], a: 1 },
+                { q: "জাতীয় ফুল কোনটি?", o: ["গোলাপ", "শাপলা", "পদ্ম", "জবা"], a: 1 },
+                { q: "জাতীয় কবি কে?", o: ["রবীন্দ্রনাথ", "নজরুল", "জসীমউদ্দীন"], a: 1 },
+                { q: "পদ্মা সেতুর দৈর্ঘ্য?", o: ["৬.১৫ কিমি", "৫ কিমি", "৪ কিমি"], a: 0 },
+                { q: "সবচেয়ে বড় জেলা?", o: ["ঢাকা", "রাঙ্গামাটি", "চট্টগ্রাম"], a: 1 },
+                { q: "বাংলাদেশের মুদ্রা?", o: ["রুপি", "টাকা", "ডলার"], a: 1 },
+                { q: "জাতীয় খেলা?", o: ["ফুটবল", "ক্রিকেট", "কাবাডি"], a: 2 },
+                { q: "সুন্দরবন কোথায়?", o: ["সিলেট", "খুলনা", "বরিশাল"], a: 1 },
+                { q: "মুজিবনগর কোথায়?", o: ["মেহেরপুর", "কুষ্টিয়া", "পাবনা"], a: 0 }
             ],
-            // আন্তর্জাতিক এবং অন্যান্য ক্যাটাগরির জন্য একই ফরম্যাটে প্রশ্ন যোগ করতে পারেন। ডেমোর জন্য সব এক রাখা হলো।
-            international: [], gk: [], islamic: [] 
+            international: [ { q: "সবচেয়ে বড় দেশ?", o: ["চীন", "রাশিয়া", "কানাডা"], a: 1 } ],
+            gk: [ { q: "মানুষের হাড় কয়টি?", o: ["২০৬", "৩০৬", "১০৬"], a: 0 } ],
+            islamic: [ { q: "কুরআনের সূরা কয়টি?", o: ["১১৪", "১১০", "১২০"], a: 0 } ]
         };
 
-        // অন্য ক্যাটাগরিতে ডেমো ডাটা কপি (যাতে এরর না খায়)
-        questionsDB.international = questionsDB.bangladesh;
-        questionsDB.gk = questionsDB.bangladesh;
-        questionsDB.islamic = questionsDB.bangladesh;
-
-        function startQuiz(category) {
-            activeQuiz = questionsDB[category].sort(() => 0.5 - Math.random()).slice(0, 10); // ১০ টি প্রশ্ন
+        function startQuiz(cat) {
+            currentQuiz = quizDB[cat] || quizDB['bangladesh'];
+            // Shuffle and take 10
+            currentQuiz = currentQuiz.sort(() => 0.5 - Math.random()).slice(0, 10);
             quizIndex = 0;
-            quizScore = 0;
+            score = 0;
             document.getElementById('quizModal').style.display = "flex";
             loadQuestion();
         }
 
         function loadQuestion() {
-            if (quizIndex >= 10) {
-                // কুইজ শেষ
-                finishQuiz();
+            if (quizIndex >= currentQuiz.length) {
+                endQuiz();
                 return;
             }
+            const q = currentQuiz[quizIndex];
+            document.getElementById('qText').innerText = q.q;
+            document.getElementById('qIndex').innerText = quizIndex + 1;
             
-            const q = activeQuiz[quizIndex];
-            document.getElementById('questionText').innerText = q.q;
-            document.getElementById('qCount').innerText = quizIndex + 1;
-            
-            const div = document.getElementById('optionsContainer');
+            const div = document.getElementById('qOptions');
             div.innerHTML = '';
-            
-            q.o.forEach((opt, idx) => {
+            q.o.forEach((opt, i) => {
                 const btn = document.createElement('button');
-                btn.className = 'option-btn';
+                btn.className = 'quiz-option';
                 btn.innerText = opt;
-                btn.onclick = () => checkAnswer(idx, q.a, btn);
+                btn.onclick = () => checkAns(i, q.a, btn);
                 div.appendChild(btn);
             });
         }
 
-        function checkAnswer(selected, correct, btn) {
-            const allBtns = document.querySelectorAll('.option-btn');
-            allBtns.forEach(b => b.disabled = true);
-
-            if (selected === correct) {
+        function checkAns(sel, cor, btn) {
+            const all = document.querySelectorAll('.quiz-option');
+            all.forEach(b => b.disabled = true);
+            
+            if(sel === cor) {
                 btn.classList.add('correct');
-                quizScore++;
+                score++;
             } else {
                 btn.classList.add('wrong');
-                allBtns[correct].classList.add('correct');
+                all[cor].classList.add('correct');
             }
-
             setTimeout(() => {
                 quizIndex++;
                 loadQuestion();
             }, 1000);
         }
 
-        function finishQuiz() {
-            closeModal('quizModal');
+        function endQuiz() {
+            document.getElementById('quizModal').style.display = "none";
             
-            // ১০ টি কুইজ শেষ, এখন অ্যাড দেখাবে
-            Swal.fire({
-                title: 'কুইজ শেষ!',
-                text: 'আপনার রিওয়ার্ড পেতে বিজ্ঞাপনটি দেখুন।',
-                icon: 'info',
-                confirmButtonText: 'ওকে'
-            }).then(() => {
-                showAdAndReward(5); // ৫ কয়েন রিওয়ার্ড
-            });
+            // Show Ad
+            if(window.showGiga) {
+                window.showGiga().then(() => giveReward(score * 5)).catch(() => giveReward(score * 5));
+            } else {
+                giveReward(score * 5);
+            }
         }
 
-        // --- স্পিন লজিক ---
-        function openSpinModal() {
-            document.getElementById('spinModal').style.display = "flex";
+        async function giveReward(amount) {
+            Swal.fire('অভিনন্দন!', `আপনি ${amount} কয়েন পেয়েছেন!`, 'success');
+            await supabase.from('users').update({ 
+                balance: dbUser.balance + amount,
+                quizzes_played: dbUser.quizzes_played + 1 
+            }).eq('telegram_id', user.id);
+            syncUser();
         }
 
-        function performSpin() {
-            if (dailySpins <= 0) {
+        // --- SPIN LOGIC ---
+        function doSpin() {
+            if (dbUser.spins_left <= 0) {
                 Swal.fire('দুঃখিত', 'আজকের স্পিন শেষ!', 'error');
                 return;
             }
-
-            const btn = document.getElementById('doSpinBtn');
-            const wheel = document.getElementById('wheel');
+            const btn = document.getElementById('spinTrigger');
             btn.disabled = true;
+            const wheel = document.getElementById('wheel');
+            
+            // Random rotation
+            const rot = Math.floor(3000 + Math.random() * 3000);
+            wheel.style.transform = `rotate(${rot}deg)`;
 
-            // এনিমেশন
-            const deg = Math.floor(3000 + Math.random() * 3000);
-            wheel.style.transform = `rotate(${deg}deg)`;
+            setTimeout(async () => {
+                // Reward Calc
+                const points = Math.floor(Math.random() * 50) + 10;
+                
+                // Ad Trigger
+                if(window.showGiga) {
+                    try { await window.showGiga(); } catch(e){}
+                }
 
-            setTimeout(() => {
-                // স্পিন শেষ
-                dailySpins--;
-                updateSpinInDB(dailySpins); // ডাটাবেস আপডেট
+                await supabase.from('users').update({
+                    balance: dbUser.balance + points,
+                    spins_left: dbUser.spins_left - 1
+                }).eq('telegram_id', user.id);
+
+                Swal.fire('অভিনন্দন!', `আপনি ${points} কয়েন জিতেছেন!`, 'success');
+                syncUser();
                 
-                Swal.fire({
-                    title: 'অভিনন্দন!',
-                    text: 'স্পিন সম্পন্ন হয়েছে। রিওয়ার্ড পেতে বিজ্ঞাপন দেখুন।',
-                    icon: 'success'
-                }).then(() => {
-                    // স্পিন শেষে অ্যাড শো এবং রিওয়ার্ড
-                    showAdAndReward(5); // ৫ কয়েন
-                    
-                    // রিসেট হুইল
-                    wheel.style.transition = 'none';
-                    wheel.style.transform = 'rotate(0deg)';
-                    setTimeout(() => { 
-                        wheel.style.transition = 'transform 4s cubic-bezier(0.33, 1, 0.68, 1)'; 
-                        btn.disabled = false;
-                    }, 100);
-                });
-                
-                updateUI();
+                // Reset Wheel
+                wheel.style.transition = 'none';
+                wheel.style.transform = 'rotate(0deg)';
+                setTimeout(() => {
+                    wheel.style.transition = 'transform 4s cubic-bezier(0.33, 1, 0.68, 1)';
+                    btn.disabled = false;
+                }, 100);
+
             }, 4000);
         }
 
-        async function updateSpinInDB(newCount) {
-            await supabase.from('users').update({ spins_left: newCount }).eq('telegram_id', currentUser.telegram_id);
-        }
-
-        // --- Gigapub Ads এবং Reward ---
-        function showAdAndReward(amount) {
-            // Gigapub Show Function
-            if (window.showGiga) {
-                window.showGiga().then(() => {
-                    // অ্যাড সফলভাবে দেখা হয়েছে
-                    addBalance(amount);
-                    Swal.fire('সফল!', `আপনি ${amount} কয়েন পেয়েছেন।`, 'success');
-                }).catch((e) => {
-                    console.error(e);
-                    // অ্যাড লোড না হলেও রিওয়ার্ড দেওয়া (ইউজার এক্সপেরিয়েন্স ঠিক রাখতে)
-                    addBalance(amount);
-                    Swal.fire('অভিনন্দন', `অ্যাড লোড হয়নি, তবে আপনি ${amount} কয়েন পেয়েছেন!`, 'success');
-                });
-            } else {
-                console.warn("Gigapub script not loaded");
-                addBalance(amount);
-            }
-        }
-
-        async function addBalance(amount) {
-            const newBalance = currentBalance + amount;
-            currentBalance = newBalance;
-            updateUI();
-            
-            // ডাটাবেসে আপডেট
-            await supabase
-                .from('users')
-                .update({ balance: newBalance })
-                .eq('telegram_id', currentUser.telegram_id);
-        }
-
-        // --- উইথড্রয়াল ---
+        // --- WITHDRAW LOGIC ---
         async function submitWithdraw() {
-            const method = document.getElementById('wMethod').value;
             const amount = parseInt(document.getElementById('wAmount').value);
             const number = document.getElementById('wNumber').value;
+            const method = document.getElementById('wMethod').value;
 
-            if (!amount || !number) {
-                Swal.fire('ত্রুটি', 'সব তথ্য সঠিক দিন', 'warning');
-                return;
-            }
-            if (amount < 3000) {
-                Swal.fire('ত্রুটি', 'মিনিমাম ৩০০০ কয়েন প্রয়োজন', 'warning');
-                return;
-            }
-            if (amount > currentBalance) {
-                Swal.fire('ত্রুটি', 'আপনার পর্যাপ্ত ব্যালেন্স নেই', 'error');
-                return;
-            }
+            if(amount < 3000) return Swal.fire('Error', 'মিনিমাম ৩০০০ কয়েন লাগবে', 'error');
+            if(amount > dbUser.balance) return Swal.fire('Error', 'পর্যাপ্ত ব্যালেন্স নেই', 'error');
+            if(!number) return Swal.fire('Error', 'নাম্বার দিন', 'error');
 
-            // ব্যালেন্স কাটা
-            await addBalance(-amount);
+            // Deduct Balance
+            await supabase.from('users').update({ balance: dbUser.balance - amount }).eq('telegram_id', user.id);
+            
+            // Add Request
+            await supabase.from('withdrawals').insert([{
+                telegram_id: user.id,
+                amount: amount,
+                method: method,
+                number: number
+            }]);
 
-            // উইথড্র রিকোয়েস্ট জমা
-            const { error } = await supabase
-                .from('withdrawals')
-                .insert([{ 
-                    telegram_id: currentUser.telegram_id, 
-                    method: method, 
-                    amount: amount, 
-                    number: number 
-                }]);
-
-            if (error) {
-                Swal.fire('সার্ভার ত্রুটি', 'পরে চেষ্টা করুন', 'error');
-                await addBalance(amount); // রিফান্ড
-            } else {
-                closeModal('withdrawModal');
-                Swal.fire('সফল!', 'আপনার রিকোয়েস্ট জমা হয়েছে। এডমিন চেক করে পেমেন্ট করবে।', 'success');
-            }
+            syncUser();
+            Swal.fire('সফল!', 'আপনার রিকোয়েস্ট এডমিনের কাছে পাঠানো হয়েছে।', 'success');
         }
 
-        // --- ইউটিলিটি ---
-        function openModal(id) { document.getElementById(id).style.display = "flex"; }
-        function closeModal(id) { document.getElementById(id).style.display = "none"; }
-
-        // অ্যাপ চালু
-        window.onload = initApp;
+        // Start
+        window.onload = init;
 
     </script>
 </body>
