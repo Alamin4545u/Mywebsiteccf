@@ -1,368 +1,605 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-<meta charset="UTF-8">
-<title>বোতল ফ্লিপ - প্রিমিয়াম এডিশন</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-        margin:0; overflow:hidden; font-family:'Segoe UI',sans-serif;
-        background:linear-gradient(#2e7d32,#1b5e20); height:100vh;
-        user-select:none; -webkit-user-select:none; touch-action:manipulation;
-    }
-    canvas { display:block; }
-    
-    /* UI */
-    #ui { position:absolute; inset:0; pointer-events:none; color:white; }
-    #top-bar {
-        display:flex; justify-content:space-between; align-items:center;
-        padding:15px 20px; background:rgba(0,0,0,0.25); backdrop-filter:blur(10px);
-    }
-    .stat {
-        display:flex; align-items:center; background:rgba(255,255,255,0.2);
-        padding:8px 18px; border-radius:50px; font-weight:bold; font-size:1.4rem;
-        backdrop-filter:blur(8px); pointer-events:all;
-    }
-    .stat img { width:36px; height:36px; margin-right:8px; }
-    #pause-btn {
-        width:50px; height:50px; background:rgba(255,255,255,0.25);
-        border-radius:50%; display:grid; place-items:center; font-size:1.8rem;
-        pointer-events:all;
-    }
-    #progress-container {
-        position:absolute; top:90px; left:20px; right:20px; height:30px;
-        background:rgba(0,0,0,0.3); border-radius:20px; overflow:hidden;
-        pointer-events:none;
-    }
-    #progress {
-        height:100%; width:100%; background:linear-gradient(90deg,#ffb300,#ff6d00);
-        border-radius:20px; transition:width 0.4s ease;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Quiz Earn BD</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Telegram WebApp Script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Supabase Script -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- SweetAlert2 for Popups -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    /* Screens */
-    .screen {
-        position:absolute; inset:0; background:rgba(0,0,0,0.8);
-        display:flex; flex-direction:column; justify-content:center; align-items:center;
-        color:white; text-align:center;
-    }
-    h1 { font-size:4rem; margin-bottom:20px; color:#ffeb3b; text-shadow:0 5px 10px #000; }
-    button {
-        padding:18px 60px; margin:15px; font-size:2rem; background:#e91e63;
-        color:white; border:none; border-radius:50px; cursor:pointer;
-        box-shadow:0 8px 0 #ad1457; transition:0.2s;
-    }
-    button:active { transform:translateY(8px); box-shadow:none; }
-    .hidden { display:none; }
-</style>
+    <style>
+        :root {
+            --primary: #6C5CE7;
+            --secondary: #00CEC9;
+            --bg-color: #dfe6e9;
+            --text-color: #2d3436;
+            --card-bg: #ffffff;
+            --shadow-light: rgba(255, 255, 255, 0.5);
+            --shadow-dark: rgba(0, 0, 0, 0.15);
+        }
+
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Hind Siliguri', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        /* --- Header 3D --- */
+        .header {
+            background: linear-gradient(135deg, #6C5CE7, #a29bfe);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom-left-radius: 25px;
+            border-bottom-right-radius: 25px;
+            box-shadow: 0 10px 20px rgba(108, 92, 231, 0.3);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .user-info { display: flex; align-items: center; gap: 10px; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid white; }
+        .user-name { font-weight: 700; font-size: 1rem; }
+        
+        .balance-box {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .balance-box:active { transform: scale(0.95); }
+        .coin-icon { color: #FFD700; font-size: 1.2rem; text-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+        /* --- Main Container --- */
+        .container { padding: 20px; padding-bottom: 80px; }
+
+        /* --- Gigapub Ads Placeholder --- */
+        .ad-banner {
+            width: 100%;
+            height: 100px;
+            background: #f1f2f6;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px dashed #b2bec3;
+            color: #636e72;
+            font-size: 0.9rem;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        /* --- Section Title --- */
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #2d3436;
+            border-left: 5px solid var(--primary);
+            padding-left: 10px;
+        }
+
+        /* --- 3D Grid Layout --- */
+        .quiz-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .quiz-card {
+            height: 120px;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.1s;
+            /* 3D Effect */
+            transform: translateY(0);
+            box-shadow: 0 6px 0 rgba(0,0,0,0.2), 0 10px 10px rgba(0,0,0,0.1);
+        }
+
+        .quiz-card:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 rgba(0,0,0,0.2), inset 0 0 5px rgba(0,0,0,0.1);
+        }
+
+        .quiz-card i { font-size: 2rem; margin-bottom: 5px; }
+        .quiz-card span { font-size: 0.9rem; }
+
+        /* Colors specific to cards */
+        .bg-bd { background: linear-gradient(135deg, #00b894, #00cec9); border-bottom: 6px solid #008b70; }
+        .bg-int { background: linear-gradient(135deg, #0984e3, #74b9ff); border-bottom: 6px solid #065fa3; }
+        .bg-gk { background: linear-gradient(135deg, #fdcb6e, #e17055); border-bottom: 6px solid #d35400; }
+        .bg-isl { background: linear-gradient(135deg, #2ecc71, #27ae60); border-bottom: 6px solid #1e8449; }
+
+        /* --- Spin Wheel Section --- */
+        .spin-section {
+            background: #fff;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .wheel-container {
+            width: 250px;
+            height: 250px;
+            margin: 0 auto 20px auto;
+            position: relative;
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 8px solid #6C5CE7;
+            background: conic-gradient(
+                #ff7675 0deg 60deg,
+                #74b9ff 60deg 120deg,
+                #55efc4 120deg 180deg,
+                #ffeaa7 180deg 240deg,
+                #a29bfe 240deg 300deg,
+                #fd79a8 300deg 360deg
+            );
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            transition: transform 4s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+
+        .wheel-arrow {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0; 
+            height: 0; 
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid #2d3436;
+            z-index: 10;
+        }
+
+        .spin-btn {
+            background: linear-gradient(135deg, #e84393, #d63031);
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #b71540;
+            transition: all 0.1s;
+        }
+        .spin-btn:active { transform: translateY(5px); box-shadow: none; }
+
+        /* --- Modals (Hidden by default) --- */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+            position: relative;
+            animation: popup 0.3s ease-out;
+        }
+        @keyframes popup { from{transform: scale(0.5); opacity: 0;} to{transform: scale(1); opacity: 1;} }
+
+        .close-btn {
+            position: absolute; top: 10px; right: 15px; font-size: 25px; cursor: pointer; color: #636e72;
+        }
+
+        /* Quiz UI in Modal */
+        .option-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: #f1f2f6;
+            border: 2px solid #dfe6e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3436;
+            cursor: pointer;
+        }
+        .option-btn.correct { background: #55efc4; color: white; border-color: #00b894; }
+        .option-btn.wrong { background: #ff7675; color: white; border-color: #d63031; }
+
+        /* Withdraw UI */
+        .withdraw-input {
+            width: 100%; padding: 10px; margin: 10px 0;
+            border: 2px solid #ddd; border-radius: 10px; font-family: inherit;
+        }
+        .withdraw-btn {
+            background: var(--primary); color: white; width: 100%; padding: 12px;
+            border: none; border-radius: 10px; font-weight: bold; margin-top: 10px;
+        }
+
+    </style>
 </head>
 <body>
 
-<canvas id="c"></canvas>
-
-<div id="ui">
-    <div id="top-bar">
-        <div class="stat">
-            <img src="https://i.imgur.com/v8pE8V5.png"> <span id="coins">1000</span>
+    <!-- Header -->
+    <div class="header">
+        <div class="user-info">
+            <img src="https://via.placeholder.com/40" alt="User" class="user-avatar" id="userAvatar">
+            <div>
+                <div class="user-name" id="userName">লোড হচ্ছে...</div>
+                <div style="font-size: 0.7rem; opacity: 0.8;">আইডি: <span id="userId">...</span></div>
+            </div>
         </div>
-        <div class="stat">
-            <img src="https://i.imgur.com/tH3f8c5.png"> <span id="lives">3</span>
+        <div class="balance-box" onclick="openWithdrawModal()">
+            <i class="fas fa-coins coin-icon"></i>
+            <span id="userBalance" style="font-weight: 700; font-size: 1.1rem;">0</span>
         </div>
-        <div class="stat">
-            <img src="https://i.imgur.com/8qQ3Y3a.png"> <span id="level">1</span>
-        </div>
-        <div id="pause-btn">II</div>
     </div>
 
-    <div id="progress-container">
-        <div id="progress"></div>
+    <!-- Main Content -->
+    <div class="container">
+        
+        <!-- Gigapub Ad Banner -->
+        <div class="ad-banner" id="ad-container-top">
+            <!-- এখানে Gigapub এর স্ক্রিপ্ট বসাবেন -->
+            <i class="fas fa-ad"></i> &nbsp; বিজ্ঞাপন (Gigapub Ads)
+        </div>
+
+        <!-- Quiz Section -->
+        <div class="section-title">কুইজ খেলুন এবং আয় করুন</div>
+        <div class="quiz-grid">
+            <div class="quiz-card bg-bd" onclick="startQuiz('bangladesh')">
+                <i class="fas fa-flag"></i>
+                <span>বাংলাদেশ</span>
+            </div>
+            <div class="quiz-card bg-int" onclick="startQuiz('international')">
+                <i class="fas fa-globe-americas"></i>
+                <span>আন্তর্জাতিক</span>
+            </div>
+            <div class="quiz-card bg-gk" onclick="startQuiz('gk')">
+                <i class="fas fa-brain"></i>
+                <span>সাধারণ জ্ঞান</span>
+            </div>
+            <div class="quiz-card bg-isl" onclick="startQuiz('islamic')">
+                <i class="fas fa-mosque"></i>
+                <span>ইসলামিক</span>
+            </div>
+        </div>
+
+        <!-- Spin Section -->
+        <div class="section-title">লাকি স্পিন</div>
+        <div class="spin-section">
+            <div class="wheel-container">
+                <div class="wheel-arrow"></div>
+                <div class="wheel" id="wheel"></div>
+            </div>
+            <button class="spin-btn" id="spinBtn" onclick="spinWheel()">স্পিন করুন</button>
+        </div>
     </div>
-</div>
 
-<!-- Screens -->
-<div id="start-screen" class="screen">
-    <h1>বোতল ফ্লিপ</h1>
-    <button id="play-btn">খেলা শুরু</button>
-</div>
+    <!-- Quiz Modal -->
+    <div id="quizModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('quizModal')">&times;</span>
+            <h3 id="questionText">প্রশ্ন লোড হচ্ছে...</h3>
+            <div id="optionsContainer"></div>
+            <div style="margin-top: 15px; font-size: 0.9rem; color: #636e72;">
+                প্রশ্ন: <span id="qCurrent">1</span>/<span id="qTotal">10</span>
+            </div>
+        </div>
+    </div>
 
-<div id="gameover-screen" class="screen hidden">
-    <h1>গেম ওভার!</h1>
-    <p style="font-size:2rem;">তোমার স্কোর: <span id="final-score">0</span></p>
-    <button id="restart-btn">আবার খেলো</button>
-</div>
+    <!-- Withdraw Modal -->
+    <div id="withdrawModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('withdrawModal')">&times;</span>
+            <h3>টাকা উত্তোলন</h3>
+            <p>আপনার বর্তমান ব্যালেন্স: <span id="modalBalance" style="color: var(--primary); font-weight:bold;">0</span></p>
+            
+            <select class="withdraw-input" id="withdrawMethod">
+                <option value="bkash">বিকাশ</option>
+                <option value="nagad">নগদ</option>
+                <option value="rocket">রকেট</option>
+                <option value="recharge">মোবাইল রিচার্জ</option>
+            </select>
+            <input type="number" class="withdraw-input" id="withdrawAmount" placeholder="পরিমাণ (নূন্যতম ৫০)">
+            <input type="text" class="withdraw-input" id="withdrawNumber" placeholder="মোবাইল নাম্বার">
+            
+            <button class="withdraw-btn" onclick="submitWithdraw()">রিকোয়েস্ট পাঠান</button>
+        </div>
+    </div>
 
-<audio id="flip" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3"></audio>
-<audio id="land" src="https://assets.mixkit.co/sfx/preview/mixkit-unlock-game-notification-253.mp3"></audio>
-<audio id="perfect" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3"></audio>
-<audio id="fail" src="https://assets.mixkit.co/sfx/preview/mixkit-player-losing-or-failing-2043.mp3"></audio>
+    <script>
+        // --- কনফিগারেশন (এডমিন প্যানেল থেকে যা কন্ট্রোল করবেন তা ডাটাবেস থেকে আনা হবে) ---
+        const CONFIG = {
+            quizReward: 10,      // প্রতিটি সঠিক উত্তরের জন্য পয়েন্ট
+            spinCost: 0,         // স্পিন করতে খরচ (যদি থাকে)
+            questionsPerQuiz: 5  // প্রতি সেশনে কয়টি প্রশ্ন
+        };
 
-<script>
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-canvas.width = Math.min(window.innerWidth, 500);
-canvas.height = window.innerHeight;
+        // --- Supabase সেটআপ (আপনার KEY এখানে দিন) ---
+        // রিয়েল লাইফে এই কি গুলো সার্ভারে বা এনভায়রনমেন্ট ভেরিয়েবলে থাকে, কিন্তু ক্লায়েন্ট সাইড ডেমোর জন্য এখানে দেওয়া হলো।
+        const supabaseUrl = 'আপনার_SUPABASE_URL_এখানে_দিন';
+        const supabaseKey = 'আপনার_SUPABASE_ANON_KEY_এখানে_দিন';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-let score = 0, lives = 3, level = 1, coins = 1000;
-let bottle, platforms = [], currentPlatform;
-let dragging = false, startX, startY;
-let gameActive = false;
+        // --- টেলিগ্রাম ইউজার ডাটা ---
+        const tg = window.Telegram.WebApp;
+        tg.expand();
 
-// বোতল ক্লাস
-class Bottle {
-    constructor() { this.reset(); }
-    reset() {
-        this.w = 40; this.h = 100;
-        this.x = currentPlatform.x + currentPlatform.w/2 - 20;
-        this.y = currentPlatform.y - this.h;
-        this.vx = this.vy = this.rot = this.rotSpeed = 0;
-        this.flipping = false;
-    }
-    draw() {
-        ctx.save();
-        ctx.translate(this.x + 20, this.y + 50);
-        ctx.rotate(this.rot * Math.PI / 180);
+        // টেস্টিং এর জন্য ফেইক ইউজার ডাটা (যদি টেলিগ্রামের বাইরে ওপেন করেন)
+        let user = tg.initDataUnsafe.user || {
+            id: 123456,
+            first_name: "Guest",
+            last_name: "User",
+            username: "guest_user"
+        };
 
-        // বোতল বডি
-        ctx.fillStyle = '#d32f2f';
-        ctx.roundRect(-20, -50, 40, 100, 20).fill();
-        ctx.fillStyle = '#b71c1c';
-        ctx.roundRect(-16, -40, 32, 80, 16).fill();
+        // --- স্টেট ভেরিয়েবল ---
+        let currentBalance = 0;
+        let currentQuiz = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
 
-        // ক্যাপ
-        ctx.fillStyle = '#424242';
-        ctx.fillRect(-14, -58, 28, 15);
+        // --- ডাটাবেস থেকে ইউজার লোড বা ক্রিয়েট করা ---
+        async function initUser() {
+            // UI আপডেট
+            document.getElementById('userName').innerText = user.first_name;
+            document.getElementById('userId').innerText = user.id;
+            // প্রোফাইল পিকচার না থাকলে ডিফল্ট
+            if(user.photo_url) document.getElementById('userAvatar').src = user.photo_url;
 
-        // লেবেল
-        ctx.fillStyle = '#fff';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('Cola', 0, 10);
+            // Supabase কল (ডেমো লজিক)
+            /* 
+            প্রোডাকশনে নিচের কোডটি আনকমেন্ট করবেন যখন Supabase সেটআপ কমপ্লিট হবে:
+            
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('telegram_id', user.id)
+                .single();
 
-        ctx.restore();
-    }
-    update() {
-        if (!this.flipping) return;
-        this.vy += 0.5;
-        this.x += this.vx;
-        this.y += this.vy;
-        this.rot += this.rotSpeed;
-    }
-    launch(angle, power) {
-        this.flipping = true;
-        this.vx = Math.cos(angle) * power * 0.2;
-        this.vy = Math.sin(angle) * power * 0.2 - 3;
-        this.rotSpeed = power * 0.18 * (this.vx > 0 ? -1 : 1);
-        play('flip');
-    }
-}
-
-// প্ল্যাটফর্ম
-class Platform {
-    constructor(x, y, w, type='normal') {
-        this.x = x; this.y = y; this.w = w; this.h = 30; this.type = type;
-    }
-    draw() {
-        // টেবিল/শেল্ফ
-        ctx.fillStyle = '#6d4c41';
-        ctx.fillRect(this.x, this.y, this.w, this.h);
-        ctx.fillStyle = '#4e342e';
-        ctx.fillRect(this.x+5, this.y+5, this.w-10, this.h-10);
-
-        // ডেকোরেশন
-        if (this.type === 'shelf') {
-            // ফুলদানি
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(this.x + this.w - 50, this.y - 50, 40, 50);
-            ctx.fillStyle = '#e91e63';
-            ctx.beginPath();
-            for(let i=0;i<3;i++){
-                ctx.arc(this.x+this.w-30 + i*15, this.y-60, 12,0,Math.PI*2);
-                ctx.fill();
-            }
-        }
-        if (this.type === 'clock') {
-            ctx.fillStyle = '#ffeb3b';
-            ctx.beginPath();
-            ctx.arc(this.x + this.w/2, this.y - 40, 50, 0, Math.PI*2);
-            ctx.fill();
-            ctx.strokeStyle = '#000'; ctx.lineWidth = 5;
-            ctx.beginPath(); ctx.moveTo(this.x+this.w/2, this.y-40);
-            ctx.lineTo(this.x+this.w/2, this.y-70); ctx.stroke();
-        }
-    }
-}
-
-function initLevel() {
-    platforms = [];
-    // প্রথম টেবিল
-    platforms.push(new Platform(60, canvas.height - 100, 200, 'table'));
-    // পরের প্ল্যাটফর্ম
-    let lastY = canvas.height - 100;
-    for(let i = 1; i < 30; i++) {
-        lastY -= 140 + Math.random()*60;
-        const w = 120 + Math.random()*100;
-        const x = 30 + Math.random()*(canvas.width - w - 60);
-        const type = i%5===0 ? 'clock' : (i%3===0 ? 'shelf' : 'normal');
-        platforms.push(new Platform(x, lastY, w, type));
-    }
-    currentPlatform = platforms[0];
-    bottle = new Bottle();
-}
-
-function drawBackground() {
-    // গ্রীন ওয়াল
-    const grad = ctx.createLinearGradient(0,0,0,canvas.height);
-    grad.addColorStop(0, '#81c784');
-    grad.addColorStop(1, '#4caf50');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-
-    // উইন্ডো
-    ctx.fillStyle = '#e3f2fd';
-    ctx.fillRect(30, 80, 120, 180);
-    ctx.fillStyle = '#90caf9';
-    ctx.fillRect(40, 90, 100, 160);
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 8;
-    ctx.strokeRect(40,170,140,170);
-
-    // আরেকটা উইন্ডো
-    ctx.fillStyle = '#e3f2fd';
-    ctx.fillRect(canvas.width-150, 100, 100, 150);
-    ctx.fillStyle = '#90caf9';
-    ctx.fillRect(canvas.width-140, 110, 80, 130);
-}
-
-function play(id) {
-    const audio = document.getElementById(id);
-    audio.currentTime = 0;
-    audio.play().catch(()=>{});
-}
-
-function checkLanding() {
-    if (!bottle.flipping || bottle.vy <= 0) return false;
-    for(let i = platforms.indexOf(currentPlatform)+1; i<platforms.length; i++) {
-        const p = platforms[i];
-        if (bottle.y + bottle.h > p.y && bottle.y < p.y) {
-            if (bottle.x + 20 > p.x && bottle.x + 20 < p.x + p.w) {
-                const angle = Math.abs(bottle.rot % 360);
-                const perfect = angle < 25 || angle > 335;
-                bottle.flipping = false;
-                currentPlatform = p;
-                bottle.x = p.x + p.w/2 - 20;
-                bottle.y = p.y - bottle.h;
-                bottle.rot = 0; bottle.vx = bottle.vy = bottle.rotSpeed = 0;
-
-                if (perfect) {
-                    score += 50;
-                    coins += 20;
-                    play('perfect');
-                } else {
-                    score += 10;
-                    coins += 5;
-                    play('land');
-                }
-                level = platforms.indexOf(p);
-                document.getElementById('level').textContent = level;
-                document.getElementById('coins').textContent = coins;
-                document.getElementById('progress.style.width = `${level*3.5}%`;
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-function gameLoop() {
-    if (!gameActive) return;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    drawBackground();
-    platforms.forEach(p => p.draw());
-    bottle.draw();
-    bottle.update();
-
-    if (bottle.flipping) {
-        if (!checkLanding() && bottle.y > canvas.height + 100) {
-            lives--;
-            document.getElementById('lives').textContent = lives;
-            play('fail');
-            if (lives <= 0) {
-                gameActive = false;
-                document.getElementById('final-score').textContent = score;
-                document.getElementById('gameover-screen').classList.remove('hidden');
+            if (!data) {
+                await supabase.from('users').insert([{ telegram_id: user.id, name: user.first_name, balance: 0 }]);
+                currentBalance = 0;
             } else {
-                bottle.reset();
+                currentBalance = data.balance;
             }
+            */
+           
+            // টেস্টিং এর জন্য লোকাল স্টোরেজ ব্যবহার করছি
+            const savedBalance = localStorage.getItem('balance_' + user.id);
+            currentBalance = savedBalance ? parseInt(savedBalance) : 0;
+            updateBalanceUI();
         }
-    }
 
-    // ট্র্যাজেক্টরি লাইন
-    if (dragging) {
-        ctx.strokeStyle = 'rgba(255,255,255,0.7)';
-        ctx.lineWidth = 6;
-        ctx.setLineDash([10,15]);
-        ctx.beginPath();
-        ctx.moveTo(bottle.x+20, bottle.y+50);
-        ctx.lineTo(startX, startY);
-        ctx.stroke();
-        ctx.setLineDash([]);
-    }
+        function updateBalanceUI() {
+            document.getElementById('userBalance').innerText = currentBalance;
+            document.getElementById('modalBalance').innerText = currentBalance;
+            localStorage.setItem('balance_' + user.id, currentBalance); // টেস্টিং সেভ
+        }
 
-    requestAnimationFrame(gameLoop);
-}
+        async function addBalance(amount) {
+            currentBalance += amount;
+            updateBalanceUI();
+            
+            // Supabase Update Code
+            /*
+            await supabase.from('users').update({ balance: currentBalance }).eq('telegram_id', user.id);
+            */
+        }
 
-// কন্ট্রোল
-canvas.addEventListener('pointerdown', e => {
-    if (!gameActive || bottle.flipping) return;
-    dragging = true;
-    startX = e.clientX;
-    startY = e.clientY;
-});
-canvas.addEventListener('pointermove', e => {
-    if (dragging) {
-        e.preventDefault();
-    }
-});
-canvas.addEventListener('pointerup', e => {
-    if (!dragging) return;
-    dragging = false;
-    const dx = startX - e.clientX;
-    const dy = startY - e.clientY;
-    const dist = Math.min(Math.hypot(dx,dy), 200);
-    if (dist > 30) {
-        const angle = Math.atan2(dy, dx);
-        bottle.launch(angle, dist);
-    }
-});
+        // --- কুইজ ডাটা (মক ডাটাবেস) ---
+        const quizData = {
+            bangladesh: [
+                { q: "বাংলাদেশের জাতীয় প্রতীক কী?", options: ["শাপলা", "রয়েল বেঙ্গল টাইগার", "দোয়েল", "ইলিশ"], ans: 0 },
+                { q: "বিজয় দিবস কবে?", options: ["২১ ফেব্রুয়ারি", "২৬ মার্চ", "১৬ ডিসেম্বর", "১৪ এপ্রিল"], ans: 2 },
+                { q: "বাংলাদেশের রাজধানী কোথায়?", options: ["চট্টগ্রাম", "খুলনা", "ঢাকা", "সিলেট"], ans: 2 },
+                { q: "পদ্মা সেতুর দৈর্ঘ্য কত?", options: ["৬.১৫ কিমি", "৫.৫০ কিমি", "৪.৮০ কিমি", "৭.০০ কিমি"], ans: 0 },
+                { q: "জাতীয় কবি কে?", options: ["রবীন্দ্রনাথ ঠাকুর", "কাজী নজরুল ইসলাম", "জসীমউদ্দীন", "জীবনানন্দ দাশ"], ans: 1 }
+            ],
+            international: [
+                { q: "বিশ্বের সবচেয়ে বড় দেশ কোনটি?", options: ["চীন", "আমেরিকা", "রাশিয়া", "কানাডা"], ans: 2 },
+                { q: "ফেসবুকের প্রতিষ্ঠাতা কে?", options: ["বিল গেটস", "মার্ক জাকারবার্গ", "এলন মাস্ক", "স্টিভ জবস"], ans: 1 }
+            ],
+            gk: [
+                { q: "মানবদেহে হাড়ের সংখ্যা কত?", options: ["২০৬", "৩০৬", "১০৬", "২০৮"], ans: 0 }
+            ],
+            islamic: [
+                { q: "কুরআনের মোট সূরা কয়টি?", options: ["১১০", "১১৪", "১২০", "১০০"], ans: 1 }
+            ]
+        };
 
-// বাটন
-document.getElementById('play-btn').onclick = () => {
-    score = 0; lives = 3; level = 1; coins = 1000;
-    document.getElementById('coins.textContent = coins;
-    document.getElementById('lives').textContent = lives;
-    document.getElementById('level').textContent = level;
-    document.getElementById('progress').style.width = '0%';
-    document.getElementById('start-screen').classList.add('hidden');
-    initLevel();
-    gameActive = true;
-    gameLoop();
-};
-document.getElementById('restart-btn').onclick = () => location.reload();
-document.getElementById('pause-btn').onclick = () => alert('পজ করতে চাইলে ব্যাক বাটন চাপুন');
+        // --- কুইজ ফাংশনালিটি ---
+        function startQuiz(category) {
+            // ডাটাবেস থেকে প্রশ্ন আনার লজিক এখানে বসবে
+            // আপাতত লোকাল অ্যারে থেকে নেওয়া হচ্ছে
+            let allQuestions = quizData[category] || quizData['bangladesh']; // ফলব্যাক
+            
+            // র‍্যান্ডম প্রশ্ন বাছাই
+            currentQuiz = allQuestions.sort(() => 0.5 - Math.random()).slice(0, CONFIG.questionsPerQuiz);
+            
+            if(currentQuiz.length === 0) {
+                Swal.fire('দুঃখিত', 'এই ক্যাটাগরিতে বর্তমানে প্রশ্ন নেই।', 'info');
+                return;
+            }
 
-// Canvas roundRect helper
-CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r) {
-    this.beginPath();
-    this.moveTo(x+r, y);
-    this.arcTo(x+w, y, x+w, y+h, r);
-    this.arcTo(x+w, y+h, x, y+h, r);
-    this.arcTo(x, y+h, x, y, r);
-    this.arcTo(x, y, x+w, y, r);
-    this.closePath();
-    return this;
-};
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById('quizModal').style.display = "flex";
+            loadQuestion();
+        }
 
-// শুরু
-initLevel();
-</script>
+        function loadQuestion() {
+            if (currentQuestionIndex >= currentQuiz.length) {
+                endQuiz();
+                return;
+            }
+            
+            const q = currentQuiz[currentQuestionIndex];
+            document.getElementById('questionText').innerText = q.q;
+            document.getElementById('qCurrent').innerText = currentQuestionIndex + 1;
+            document.getElementById('qTotal').innerText = currentQuiz.length;
+
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(index, q.ans, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selected, correct, btnElement) {
+            // বাটনগুলো ডিজেবল করা যাতে একাধিক ক্লিক না হয়
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => b.disabled = true);
+
+            if (selected === correct) {
+                btnElement.classList.add('correct');
+                score++;
+            } else {
+                btnElement.classList.add('wrong');
+                // সঠিক উত্তর দেখিয়ে দেওয়া
+                btns[correct].classList.add('correct');
+            }
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                loadQuestion();
+            }, 1000);
+        }
+
+        function endQuiz() {
+            closeModal('quizModal');
+            const earnedPoints = score * CONFIG.quizReward;
+            addBalance(earnedPoints);
+            
+            Swal.fire({
+                title: 'অভিনন্দন!',
+                text: `আপনি ${currentQuiz.length} টির মধ্যে ${score} টি সঠিক উত্তর দিয়েছেন। মোট আয়: ${earnedPoints} কয়েন।`,
+                icon: 'success',
+                confirmButtonText: 'ঠিক আছে'
+            });
+            
+            // এখানে অ্যাড শো করা যেতে পারে (Gigapub Interstitial)
+        }
+
+        // --- স্পিন হুইল ফাংশনালিটি ---
+        let spinning = false;
+        function spinWheel() {
+            if (spinning) return;
+            spinning = true;
+
+            const wheel = document.getElementById('wheel');
+            // র‍্যান্ডম রোটেশন (3600 ডিগ্রি মানে ১০ বার ঘোরা + র‍্যান্ডম পজিশন)
+            const randomDeg = Math.floor(5000 + Math.random() * 5000); 
+            
+            wheel.style.transform = `rotate(${randomDeg}deg)`;
+
+            setTimeout(() => {
+                spinning = false;
+                // পয়েন্ট ক্যালকুলেশন (ডেমো: র‍্যান্ডম ৫-৫০ কয়েন)
+                const points = Math.floor(Math.random() * 50) + 5;
+                addBalance(points);
+                
+                Swal.fire({
+                    title: 'ওয়াও!',
+                    text: `আপনি জিতেছেন ${points} কয়েন!`,
+                    icon: 'success'
+                });
+                
+                // পরের স্পিনের জন্য রিসেট (transition ছাড়া)
+                wheel.style.transition = 'none';
+                wheel.style.transform = `rotate(${randomDeg % 360}deg)`;
+                setTimeout(() => { wheel.style.transition = 'transform 4s cubic-bezier(0.25, 0.1, 0.25, 1)'; }, 50);
+
+            }, 4000); // ৪ সেকেন্ড পর রেজাল্ট
+        }
+
+        // --- উইথড্রয়াল ফাংশনালিটি ---
+        function openWithdrawModal() {
+            document.getElementById('withdrawModal').style.display = "flex";
+            document.getElementById('modalBalance').innerText = currentBalance;
+        }
+
+        async function submitWithdraw() {
+            const method = document.getElementById('withdrawMethod').value;
+            const amount = parseInt(document.getElementById('withdrawAmount').value);
+            const number = document.getElementById('withdrawNumber').value;
+
+            if (!amount || !number || amount < 50) {
+                Swal.fire('ত্রুটি', 'মিনিমাম ৫০ কয়েন এবং সঠিক নাম্বার দিন।', 'error');
+                return;
+            }
+
+            if (amount > currentBalance) {
+                Swal.fire('ত্রুটি', 'আপনার পর্যাপ্ত ব্যালেন্স নেই।', 'error');
+                return;
+            }
+
+            // ব্যালেন্স কমানো
+            addBalance(-amount);
+
+            // Supabase এ রিকোয়েস্ট পাঠানো
+            /*
+            const { error } = await supabase
+                .from('withdrawals')
+                .insert([{ user_id: user.id, method: method, amount: amount, number: number, status: 'pending' }]);
+            */
+           
+            closeModal('withdrawModal');
+            Swal.fire('সফল', 'আপনার উইথড্র রিকোয়েস্ট এডমিনের কাছে পাঠানো হয়েছে।', 'success');
+        }
+
+        // --- ইউটিলিটি ---
+        function closeModal(id) {
+            document.getElementById(id).style.display = "none";
+        }
+
+        // অ্যাপ লোড হলে
+        window.onload = initUser;
+
+    </script>
 </body>
 </html>
