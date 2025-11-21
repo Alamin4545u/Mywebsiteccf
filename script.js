@@ -20,11 +20,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         user = tg.initDataUnsafe.user;
     } else {
-        // Demo User
         user = { id: 123456, first_name: 'Demo User', photo_url: 'https://cdn-icons-png.flaticon.com/512/149/149071.png' };
     }
 
-    // Set Header Info
     document.getElementById('headerName').innerText = user.first_name;
     document.getElementById('headerId').innerText = user.id;
     document.getElementById('profileName').innerText = user.first_name;
@@ -32,12 +30,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('headerImg').src = photo;
     document.getElementById('profileImg').src = photo;
 
-    // Fetch Config & User
     await fetchConfig();
     await syncUser();
 });
 
-// --- DB CONFIG ---
+// --- DB FUNCTIONS ---
 async function fetchConfig() {
     const { data } = await supabase.from('app_config').select('*').eq('id', 1).single();
     if(data) {
@@ -46,7 +43,6 @@ async function fetchConfig() {
     }
 }
 
-// --- DB USER SYNC ---
 async function syncUser() {
     let { data } = await supabase.from('users').select('*').eq('telegram_id', user.id).single();
     const today = new Date().toISOString().split('T')[0];
@@ -78,7 +74,6 @@ function updateUI() {
     document.getElementById('spinCount').innerText = dbUser.spins_left;
 }
 
-// --- NAVIGATION ---
 function navTo(pageId, navId) {
     document.querySelectorAll('.pages').forEach(p => p.classList.remove('active'));
     document.getElementById(pageId).classList.add('active');
@@ -86,7 +81,6 @@ function navTo(pageId, navId) {
     if(navId) document.getElementById(navId).classList.add('active');
 }
 
-// --- LEADERBOARD ---
 async function loadLeaderboard() {
     const list = document.getElementById('leaderboardList');
     list.innerHTML = '<center>Loading...</center>';
@@ -101,13 +95,12 @@ async function loadLeaderboard() {
                     <img src="${u.photo_url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" style="width:30px; height:30px; border-radius:50%;">
                     <span>${u.first_name}</span>
                 </div>
-                <b style="color:#ffd700">${u.balance} 💰</b>
+                <b style="color:#ffd700">${u.balance} 🪙</b>
             </div>`;
         });
     }
 }
 
-// --- QUIZ LOGIC ---
 async function startQuiz(cat) {
     Swal.showLoading();
     const { data } = await supabase.from('questions').select('*').eq('category', cat);
@@ -165,7 +158,6 @@ async function addBalance(amt, isQuiz) {
     syncUser();
 }
 
-// --- SPIN LOGIC ---
 function doSpin() {
     if (spinning) return;
     if (dbUser.spins_left <= 0) return Swal.fire('দুঃখিত', 'আজকের স্পিন শেষ!', 'error');
@@ -191,7 +183,6 @@ function doSpin() {
     }, 4000);
 }
 
-// --- WITHDRAW ---
 async function submitWithdraw() {
     const amt = parseInt(document.getElementById('wAmount').value);
     const num = document.getElementById('wNumber').value;
@@ -206,35 +197,62 @@ async function submitWithdraw() {
     Swal.fire('সফল!', 'রিকোয়েস্ট এডমিনের কাছে পাঠানো হয়েছে।', 'success');
 }
 
-// --- 5 SECOND AUTO AD LOOP ---
+// --- SCREEN WAKE LOCK & AUTO ADS (BACKGROUND MODE) ---
 let autoAdInterval = null;
+let wakeLock = null;
+
+async function requestWakeLock() {
+    try {
+        // ফোনের ডিসপ্লে অন রাখার রিকোয়েস্ট
+        wakeLock = await navigator.wakeLock.request('screen');
+        console.log('Screen Wake Lock active');
+        
+        // যদি কোনো কারণে লক ছুটে যায় (যেমন ইউজার অ্যাপ মিনিমাইজ করল)
+        wakeLock.addEventListener('release', () => {
+            console.log('Screen Wake Lock released');
+        });
+    } catch (err) {
+        console.error(`${err.name}, ${err.message}`);
+    }
+}
 
 function toggleAutoAds() {
     if (autoAdInterval) {
-        // বন্ধ করার লজিক
+        // বন্ধ করা হচ্ছে
         clearInterval(autoAdInterval);
         autoAdInterval = null;
+        
+        // স্ক্রিন লক রিলিজ করা (ডিসপ্লে এখন অফ হতে পারবে)
+        if (wakeLock) {
+            wakeLock.release().then(() => {
+                wakeLock = null;
+            });
+        }
+
         Swal.fire({
             icon: 'info',
             title: 'অটো অ্যাড বন্ধ!',
-            text: 'অটোমেটিক অ্যাড লুপ বন্ধ করা হয়েছে।',
+            text: 'এখন ফোনের ডিসপ্লে অফ হতে পারে।',
             timer: 2000,
             showConfirmButton: false
         });
     } else {
-        // চালু করার লজিক
+        // চালু করা হচ্ছে
         Swal.fire({
             icon: 'success',
             title: 'অটো অ্যাড চালু!',
-            text: 'প্রতি ৫ সেকেন্ড পর পর অ্যাড আসবে।',
+            text: 'ফোন চালু থাকবে এবং প্রতি ৫ সেকেন্ড পর পর অ্যাড আসবে।',
             timer: 2000,
             showConfirmButton: false
         });
-        
-        // সাথে সাথে একবার কল হবে
+
+        // ১. স্ক্রিন যেন অফ না হয়
+        requestWakeLock();
+
+        // ২. সাথে সাথে একবার অ্যাড কল
         triggerAd();
 
-        // এরপর প্রতি ৫০০০ মিলিসেকেন্ড (৫ সেকেন্ড) পর পর কল হবে
+        // ৩. প্রতি ৫ সেকেন্ড পর পর অ্যাড কল (লুপ)
         autoAdInterval = setInterval(() => {
             triggerAd();
         }, 5000);
@@ -243,12 +261,16 @@ function toggleAutoAds() {
 
 function triggerAd() {
     if (window.showGiga) {
-        // আগের অ্যাড ক্লোজ হলো কি না দেখার দরকার নেই
-        // সরাসরি কমান্ড পাঠানো হচ্ছে
+        // Fire & Forget Method
         window.showGiga().catch((e) => {
-            console.log("Ad Request Skipped (Maybe already open):", e);
+            console.log("Ad Request Sent (Might be blocked or open):", e);
         });
-    } else {
-        console.log("Gigapub script not ready yet.");
     }
 }
+
+// পেজ ভিজিবিলিটি চেঞ্জ হলে (User Tab change করলে) আবার লক নেওয়ার চেষ্টা
+document.addEventListener('visibilitychange', async () => {
+    if (wakeLock !== null && document.visibilityState === 'visible') {
+        await requestWakeLock();
+    }
+});
