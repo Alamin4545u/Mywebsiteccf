@@ -20,9 +20,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         user = tg.initDataUnsafe.user;
     } else {
+        // Demo User
         user = { id: 123456, first_name: 'Demo User', photo_url: 'https://cdn-icons-png.flaticon.com/512/149/149071.png' };
     }
 
+    // Set Header Info
     document.getElementById('headerName').innerText = user.first_name;
     document.getElementById('headerId').innerText = user.id;
     document.getElementById('profileName').innerText = user.first_name;
@@ -30,11 +32,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('headerImg').src = photo;
     document.getElementById('profileImg').src = photo;
 
+    // Fetch Config & User
     await fetchConfig();
     await syncUser();
 });
 
-// --- DB FUNCTIONS ---
+// --- DB CONFIG ---
 async function fetchConfig() {
     const { data } = await supabase.from('app_config').select('*').eq('id', 1).single();
     if(data) {
@@ -43,6 +46,7 @@ async function fetchConfig() {
     }
 }
 
+// --- DB USER SYNC ---
 async function syncUser() {
     let { data } = await supabase.from('users').select('*').eq('telegram_id', user.id).single();
     const today = new Date().toISOString().split('T')[0];
@@ -74,6 +78,7 @@ function updateUI() {
     document.getElementById('spinCount').innerText = dbUser.spins_left;
 }
 
+// --- NAVIGATION ---
 function navTo(pageId, navId) {
     document.querySelectorAll('.pages').forEach(p => p.classList.remove('active'));
     document.getElementById(pageId).classList.add('active');
@@ -81,6 +86,7 @@ function navTo(pageId, navId) {
     if(navId) document.getElementById(navId).classList.add('active');
 }
 
+// --- LEADERBOARD ---
 async function loadLeaderboard() {
     const list = document.getElementById('leaderboardList');
     list.innerHTML = '<center>Loading...</center>';
@@ -95,12 +101,13 @@ async function loadLeaderboard() {
                     <img src="${u.photo_url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" style="width:30px; height:30px; border-radius:50%;">
                     <span>${u.first_name}</span>
                 </div>
-                <b style="color:#ffd700">${u.balance} 🪙</b>
+                <b style="color:#ffd700">${u.balance} 💰</b>
             </div>`;
         });
     }
 }
 
+// --- QUIZ LOGIC ---
 async function startQuiz(cat) {
     Swal.showLoading();
     const { data } = await supabase.from('questions').select('*').eq('category', cat);
@@ -158,6 +165,7 @@ async function addBalance(amt, isQuiz) {
     syncUser();
 }
 
+// --- SPIN LOGIC ---
 function doSpin() {
     if (spinning) return;
     if (dbUser.spins_left <= 0) return Swal.fire('দুঃখিত', 'আজকের স্পিন শেষ!', 'error');
@@ -183,6 +191,7 @@ function doSpin() {
     }, 4000);
 }
 
+// --- WITHDRAW ---
 async function submitWithdraw() {
     const amt = parseInt(document.getElementById('wAmount').value);
     const num = document.getElementById('wNumber').value;
@@ -197,12 +206,12 @@ async function submitWithdraw() {
     Swal.fire('সফল!', 'রিকোয়েস্ট এডমিনের কাছে পাঠানো হয়েছে।', 'success');
 }
 
-// --- AGGRESSIVE AUTO ADS (3 Seconds Loop) ---
+// --- 5 SECOND AUTO AD LOOP ---
 let autoAdInterval = null;
 
 function toggleAutoAds() {
     if (autoAdInterval) {
-        // বন্ধ করা হচ্ছে
+        // বন্ধ করার লজিক
         clearInterval(autoAdInterval);
         autoAdInterval = null;
         Swal.fire({
@@ -213,31 +222,33 @@ function toggleAutoAds() {
             showConfirmButton: false
         });
     } else {
-        // চালু করা হচ্ছে
+        // চালু করার লজিক
         Swal.fire({
             icon: 'success',
             title: 'অটো অ্যাড চালু!',
-            text: 'প্রতি ৩ সেকেন্ড পর পর অ্যাড কমান্ড পাঠানো হবে।',
+            text: 'প্রতি ৫ সেকেন্ড পর পর অ্যাড আসবে।',
             timer: 2000,
             showConfirmButton: false
         });
         
-        // সাথে সাথে একবার কল
+        // সাথে সাথে একবার কল হবে
         triggerAd();
 
-        // ৩ সেকেন্ড পর পর লুপ চলবে (আগের অ্যাড ক্লোজ হলো কি না সেটা দেখবে না)
+        // এরপর প্রতি ৫০০০ মিলিসেকেন্ড (৫ সেকেন্ড) পর পর কল হবে
         autoAdInterval = setInterval(() => {
             triggerAd();
-        }, 3000);
+        }, 5000);
     }
 }
 
 function triggerAd() {
     if (window.showGiga) {
-        // এখানে .then() বা .catch() এর জন্য অপেক্ষা করা হবে না
-        // সরাসরি ফায়ার করা হবে
+        // আগের অ্যাড ক্লোজ হলো কি না দেখার দরকার নেই
+        // সরাসরি কমান্ড পাঠানো হচ্ছে
         window.showGiga().catch((e) => {
-            console.log("Ad overlapped or error:", e);
+            console.log("Ad Request Skipped (Maybe already open):", e);
         });
+    } else {
+        console.log("Gigapub script not ready yet.");
     }
 }
