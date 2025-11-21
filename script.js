@@ -15,14 +15,20 @@ let quizIndex = 0;
 let score = 0;
 let spinning = false;
 
+// New Ad Network Function Holder
+window.showAd = null;
+
 // --- INIT APP ---
 document.addEventListener('DOMContentLoaded', async () => {
+    
+    // 1. Init User
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         user = tg.initDataUnsafe.user;
     } else {
         user = { id: 123456, first_name: 'Demo User', photo_url: 'https://cdn-icons-png.flaticon.com/512/149/149071.png' };
     }
 
+    // 2. Set UI Info
     document.getElementById('headerName').innerText = user.first_name;
     document.getElementById('headerId').innerText = user.id;
     document.getElementById('profileName').innerText = user.first_name;
@@ -30,6 +36,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('headerImg').src = photo;
     document.getElementById('profileImg').src = photo;
 
+    // 3. Init New Ad Network (ID: 393583)
+    if (window.initCdTma) {
+        window.initCdTma({ id: '393583' })
+            .then(show => {
+                window.showAd = show;
+                console.log("Ad Manager Ready");
+            })
+            .catch(e => console.error("Ad Manager Error:", e));
+    }
+
+    // 4. Fetch Data
     await fetchConfig();
     await syncUser();
 });
@@ -101,6 +118,7 @@ async function loadLeaderboard() {
     }
 }
 
+// --- QUIZ LOGIC ---
 async function startQuiz(cat) {
     Swal.showLoading();
     const { data } = await supabase.from('questions').select('*').eq('category', cat);
@@ -145,7 +163,8 @@ function checkAns(sel, cor, btn) {
 function endQuiz() {
     document.getElementById('quizModal').style.display = "none";
     const reward = score * 5; 
-    if(window.showGiga) window.showGiga().then(() => addBalance(reward, true)).catch(() => addBalance(reward, true));
+    // Show New Ad
+    if(window.showAd) window.showAd().then(() => addBalance(reward, true)).catch(() => addBalance(reward, true));
     else addBalance(reward, true);
 }
 
@@ -158,6 +177,7 @@ async function addBalance(amt, isQuiz) {
     syncUser();
 }
 
+// --- SPIN LOGIC ---
 function doSpin() {
     if (spinning) return;
     if (dbUser.spins_left <= 0) return Swal.fire('দুঃখিত', 'আজকের স্পিন শেষ!', 'error');
@@ -172,8 +192,11 @@ function doSpin() {
         const min = appConfig.spin_reward_min || 5;
         const max = appConfig.spin_reward_max || 50;
         const points = Math.floor(Math.random() * (max - min + 1)) + min;
-        if(window.showGiga) window.showGiga().then(() => addBalance(points, false)).catch(() => addBalance(points, false));
+        
+        // Show New Ad
+        if(window.showAd) window.showAd().then(() => addBalance(points, false)).catch(() => addBalance(points, false));
         else addBalance(points, false);
+
         wheel.style.transition = 'none';
         wheel.style.transform = 'rotate(0deg)';
         setTimeout(() => {
@@ -197,62 +220,46 @@ async function submitWithdraw() {
     Swal.fire('সফল!', 'রিকোয়েস্ট এডমিনের কাছে পাঠানো হয়েছে।', 'success');
 }
 
-// --- SCREEN WAKE LOCK & AUTO ADS (BACKGROUND MODE) ---
+// --- SCREEN WAKE LOCK & AUTO ADS (UPDATED FOR NEW AD) ---
 let autoAdInterval = null;
 let wakeLock = null;
 
 async function requestWakeLock() {
     try {
-        // ফোনের ডিসপ্লে অন রাখার রিকোয়েস্ট
         wakeLock = await navigator.wakeLock.request('screen');
-        console.log('Screen Wake Lock active');
-        
-        // যদি কোনো কারণে লক ছুটে যায় (যেমন ইউজার অ্যাপ মিনিমাইজ করল)
-        wakeLock.addEventListener('release', () => {
-            console.log('Screen Wake Lock released');
-        });
+        console.log('Wake Lock active');
+        wakeLock.addEventListener('release', () => console.log('Wake Lock released'));
     } catch (err) {
-        console.error(`${err.name}, ${err.message}`);
+        console.error("Wake Lock Error:", err);
     }
 }
 
 function toggleAutoAds() {
     if (autoAdInterval) {
-        // বন্ধ করা হচ্ছে
+        // Stop Logic
         clearInterval(autoAdInterval);
         autoAdInterval = null;
-        
-        // স্ক্রিন লক রিলিজ করা (ডিসপ্লে এখন অফ হতে পারবে)
-        if (wakeLock) {
-            wakeLock.release().then(() => {
-                wakeLock = null;
-            });
-        }
+        if (wakeLock) { wakeLock.release().then(() => wakeLock = null); }
 
         Swal.fire({
             icon: 'info',
             title: 'অটো অ্যাড বন্ধ!',
-            text: 'এখন ফোনের ডিসপ্লে অফ হতে পারে।',
+            text: 'ডিসপ্লে এখন অফ হতে পারে।',
             timer: 2000,
             showConfirmButton: false
         });
     } else {
-        // চালু করা হচ্ছে
+        // Start Logic
         Swal.fire({
             icon: 'success',
             title: 'অটো অ্যাড চালু!',
-            text: 'ফোন চালু থাকবে এবং প্রতি ৫ সেকেন্ড পর পর অ্যাড আসবে।',
+            text: 'ডিসপ্লে চালু থাকবে এবং ৫ সেকেন্ড পর পর অ্যাড আসবে।',
             timer: 2000,
             showConfirmButton: false
         });
 
-        // ১. স্ক্রিন যেন অফ না হয়
         requestWakeLock();
-
-        // ২. সাথে সাথে একবার অ্যাড কল
         triggerAd();
-
-        // ৩. প্রতি ৫ সেকেন্ড পর পর অ্যাড কল (লুপ)
         autoAdInterval = setInterval(() => {
             triggerAd();
         }, 5000);
@@ -260,15 +267,16 @@ function toggleAutoAds() {
 }
 
 function triggerAd() {
-    if (window.showGiga) {
-        // Fire & Forget Method
-        window.showGiga().catch((e) => {
-            console.log("Ad Request Sent (Might be blocked or open):", e);
-        });
+    if (window.showAd) {
+        console.log("Trying to show ad...");
+        window.showAd()
+            .then(() => console.log("Ad Played"))
+            .catch(e => console.log("Ad Skipped/Error", e));
+    } else {
+        console.log("Ad Manager not initialized yet.");
     }
 }
 
-// পেজ ভিজিবিলিটি চেঞ্জ হলে (User Tab change করলে) আবার লক নেওয়ার চেষ্টা
 document.addEventListener('visibilitychange', async () => {
     if (wakeLock !== null && document.visibilityState === 'visible') {
         await requestWakeLock();
