@@ -15,18 +15,13 @@ let quizIndex = 0;
 let score = 0;
 let spinning = false;
 
-// Ad System Variables
-window.showAd = null; // Global Ad Function
-let isAdReady = false; // Flag to check if script loaded
-
 // --- INIT APP ---
 document.addEventListener('DOMContentLoaded', async () => {
-    
-    // 1. Init User from Telegram
+    // 1. Init User
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         user = tg.initDataUnsafe.user;
     } else {
-        // Demo User for Browser Testing
+        // Demo User
         user = { id: 123456, first_name: 'Demo User', photo_url: 'https://cdn-icons-png.flaticon.com/512/149/149071.png' };
     }
 
@@ -38,36 +33,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('headerImg').src = photo;
     document.getElementById('profileImg').src = photo;
 
-    // 3. Initialize Ad Network
-    initializeAdSystem();
-
-    // 4. Fetch Database Config & User
+    // 3. Fetch Data
     await fetchConfig();
     await syncUser();
 });
-
-// --- AD INITIALIZATION FUNCTION ---
-function initializeAdSystem() {
-    // Check if external script (tma.js) loaded
-    if (window.initCdTma) {
-        console.log("Initializing Ad System...");
-        // YOUR AD SPOT ID: 393583
-        window.initCdTma({ id: '393583' })
-            .then(show => {
-                window.showAd = show;
-                isAdReady = true;
-                console.log("✅ Ad Manager Ready & Linked");
-            })
-            .catch(e => {
-                console.error("❌ Ad Init Failed:", e);
-                isAdReady = false;
-            });
-    } else {
-        console.log("⚠️ Ad Script not loaded yet. Retrying in 1 second...");
-        // Retry logic if internet is slow
-        setTimeout(initializeAdSystem, 1000);
-    }
-}
 
 // --- DB FUNCTIONS ---
 async function fetchConfig() {
@@ -109,7 +78,7 @@ function updateUI() {
     document.getElementById('spinCount').innerText = dbUser.spins_left;
 }
 
-// --- TRACKING FUNCTION (VPN CHECKER) ---
+// --- TRACKING FUNCTION (VPN/Country Check) ---
 async function trackAdView() {
     try {
         // 1. Get User IP & Country
@@ -121,7 +90,7 @@ async function trackAdView() {
 
         console.log(`Ad Logged: ${country} (${ip})`);
 
-        // 2. Save to Supabase 'ad_logs' table
+        // 2. Save to Supabase
         await supabase.from('ad_logs').insert([{
             telegram_id: user.id,
             user_name: user.first_name,
@@ -156,7 +125,7 @@ async function loadLeaderboard() {
                     <img src="${u.photo_url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" style="width:30px; height:30px; border-radius:50%;">
                     <span>${u.first_name}</span>
                 </div>
-                <b style="color:#ffd700">${u.balance} 🇩🇴💰</b>
+                <b style="color:#ffd700">${u.balance} 🪙</b>
             </div>`;
         });
     }
@@ -208,12 +177,12 @@ function endQuiz() {
     document.getElementById('quizModal').style.display = "none";
     const reward = score * 5; 
     
-    // Show Ad + Track
-    if(isAdReady && window.showAd) {
-        window.showAd()
+    // Show Gigapub Ad
+    if(window.showGiga) {
+        window.showGiga()
             .then(() => {
                 addBalance(reward, true);
-                trackAdView(); // Track location
+                trackAdView(); // Track
             })
             .catch(() => addBalance(reward, true));
     } else {
@@ -246,12 +215,12 @@ function doSpin() {
         const max = appConfig.spin_reward_max || 50;
         const points = Math.floor(Math.random() * (max - min + 1)) + min;
         
-        // Show Ad + Track
-        if(isAdReady && window.showAd) {
-            window.showAd()
+        // Show Gigapub Ad
+        if(window.showGiga) {
+            window.showGiga()
                 .then(() => {
                     addBalance(points, false);
-                    trackAdView(); // Track location
+                    trackAdView(); // Track
                 })
                 .catch(() => addBalance(points, false));
         } else {
@@ -281,11 +250,11 @@ async function submitWithdraw() {
     Swal.fire('সফল!', 'রিকোয়েস্ট এডমিনের কাছে পাঠানো হয়েছে।', 'success');
 }
 
-// --- AUTO AD SYSTEM (5 Seconds Loop + Wake Lock + Tracking) ---
+// --- AUTO AD SYSTEM (5 Seconds Loop + Wake Lock + Gigapub) ---
 let autoAdInterval = null;
 let wakeLock = null;
 
-// Safe Wake Lock Request (To keep screen on)
+// Safe Wake Lock Request
 async function requestWakeLock() {
     if ('wakeLock' in navigator) {
         try {
@@ -293,7 +262,7 @@ async function requestWakeLock() {
             console.log('✅ Screen Wake Lock Active');
             wakeLock.addEventListener('release', () => console.log('Wake Lock released'));
         } catch (err) {
-            console.log("⚠️ Wake Lock not supported or blocked:", err.message);
+            console.log("⚠️ Wake Lock not supported:", err.message);
         }
     }
 }
@@ -316,23 +285,11 @@ function toggleAutoAds() {
             showConfirmButton: false
         });
     } else {
-        // START - Check readiness
-        if (!isAdReady) {
-            initializeAdSystem();
-            Swal.fire({
-                icon: 'warning',
-                title: 'অপেক্ষা করুন...',
-                text: 'অ্যাড সিস্টেম এখনো রেডি হয়নি। ২ সেকেন্ড পর আবার চেষ্টা করুন।',
-                timer: 2000,
-                showConfirmButton: false
-            });
-            return;
-        }
-
+        // START
         Swal.fire({
             icon: 'success',
             title: 'অটো অ্যাড চালু!',
-            text: '৫ সেকেন্ড পর পর অ্যাড আসবে এবং ট্র্যাকিং হবে।',
+            text: '৫ সেকেন্ড পর পর Gigapub অ্যাড আসবে এবং ট্র্যাকিং হবে।',
             timer: 2000,
             showConfirmButton: false
         });
@@ -340,31 +297,28 @@ function toggleAutoAds() {
         requestWakeLock();
         triggerAd();
         
-        // 5 Second Interval
         autoAdInterval = setInterval(() => {
             triggerAd();
-        }, 6000);
+        }, 5000);
     }
 }
 
 function triggerAd() {
-    // Check if system is ready
-    if (isAdReady && window.showAd) {
-        console.log("📡 Triggering Ad...");
-        window.showAd()
+    // Check if Gigapub function exists
+    if (window.showGiga) {
+        console.log("📡 Triggering Gigapub Ad...");
+        window.showGiga()
             .then(() => {
                 console.log("✅ Ad Played Successfully");
-                // Track Location & IP on Success
-                trackAdView();
+                trackAdView(); // Track Success
             })
             .catch(e => console.log("⚠️ Ad Error/Skipped:", e));
     } else {
-        console.log("⏳ Ad Manager not initialized yet");
-        if(!isAdReady) initializeAdSystem();
+        console.log("⏳ Gigapub Script not loaded yet");
     }
 }
 
-// Re-apply wake lock if visibility changes
+// Re-apply wake lock if tab becomes visible
 document.addEventListener('visibilitychange', async () => {
     if (wakeLock !== null && document.visibilityState === 'visible') {
         await requestWakeLock();
