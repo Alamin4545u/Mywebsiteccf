@@ -197,60 +197,47 @@ async function submitWithdraw() {
     Swal.fire('সফল!', 'রিকোয়েস্ট এডমিনের কাছে পাঠানো হয়েছে।', 'success');
 }
 
-// --- FAST RELOAD AUTO ADS LOGIC (Safe & Effective) ---
-let autoAdActive = false;
-let adTimer = null;
+// --- AGGRESSIVE AUTO ADS (3 Seconds Loop) ---
+let autoAdInterval = null;
 
 function toggleAutoAds() {
-    if (autoAdActive) {
-        // OFF Logic
-        autoAdActive = false;
-        if (adTimer) clearTimeout(adTimer);
+    if (autoAdInterval) {
+        // বন্ধ করা হচ্ছে
+        clearInterval(autoAdInterval);
+        autoAdInterval = null;
         Swal.fire({
             icon: 'info',
             title: 'অটো অ্যাড বন্ধ!',
-            text: 'অটোমেটিক অ্যাড ইম্প্রেশন বন্ধ করা হয়েছে।',
+            text: 'অটোমেটিক অ্যাড লুপ বন্ধ করা হয়েছে।',
             timer: 2000,
             showConfirmButton: false
         });
     } else {
-        // ON Logic
-        autoAdActive = true;
+        // চালু করা হচ্ছে
         Swal.fire({
             icon: 'success',
             title: 'অটো অ্যাড চালু!',
-            text: 'অ্যাড ক্লোজ করার ১ সেকেন্ডের মধ্যে নতুন অ্যাড আসবে।',
+            text: 'প্রতি ৩ সেকেন্ড পর পর অ্যাড কমান্ড পাঠানো হবে।',
             timer: 2000,
             showConfirmButton: false
         });
-        runAdLoop();
+        
+        // সাথে সাথে একবার কল
+        triggerAd();
+
+        // ৩ সেকেন্ড পর পর লুপ চলবে (আগের অ্যাড ক্লোজ হলো কি না সেটা দেখবে না)
+        autoAdInterval = setInterval(() => {
+            triggerAd();
+        }, 3000);
     }
 }
 
-function runAdLoop() {
-    if (!autoAdActive) return;
-
+function triggerAd() {
     if (window.showGiga) {
-        // Attempt to show Ad
-        window.showGiga().then(() => {
-            // Success: User has CLOSED the ad manually
-            console.log("Ad Closed by User. Loading next in 1s...");
-            
-            if (autoAdActive) {
-                // Wait 1 second then load next (Prevents freezing)
-                adTimer = setTimeout(runAdLoop, 1000);
-            }
-        }).catch((e) => {
-            // Error/No Fill: Wait 3 seconds and retry
-            console.log("Ad Error/Skipped. Retrying in 3s...", e);
-            if (autoAdActive) {
-                adTimer = setTimeout(runAdLoop, 3000);
-            }
+        // এখানে .then() বা .catch() এর জন্য অপেক্ষা করা হবে না
+        // সরাসরি ফায়ার করা হবে
+        window.showGiga().catch((e) => {
+            console.log("Ad overlapped or error:", e);
         });
-    } else {
-        // Script not ready
-        if (autoAdActive) {
-            adTimer = setTimeout(runAdLoop, 3000);
-        }
     }
-}
+            }
