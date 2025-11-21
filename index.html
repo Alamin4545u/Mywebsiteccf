@@ -5,24 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Quiz & Earn Pro</title>
     
-    <!-- ফন্ট এবং স্টাইল -->
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- স্ক্রিপ্ট লাইব্রেরি -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <!-- NEW AD NETWORK SCRIPT -->
-    <script src="https://js.onclckvd.com/in-stream-ad-admanager/tma.js"></script>
+    <!-- Gigapub Ads Script -->
+    <script src="https://ad.gigapub.tech/script?id=4413"></script>
 
     <style>
         :root { --primary: #6C5CE7; --bg: #dfe6e9; --text: #2d3436; --gold: #ffd700; }
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg); margin: 0; padding-bottom: 90px; color: var(--text); overflow-x: hidden; }
 
-        /* Header */
         .header {
             background: linear-gradient(135deg, #6C5CE7, #a29bfe); padding: 15px 20px;
             border-radius: 0 0 30px 30px; box-shadow: 0 10px 20px rgba(108,92,231,0.3);
@@ -35,14 +31,12 @@
             backdrop-filter: blur(5px); font-weight: bold; display: flex; align-items: center; gap: 5px;
             cursor: pointer; transition: transform 0.2s;
         }
-        .balance-badge:active { transform: scale(0.95); background: rgba(255,255,255,0.4); }
+        .balance-badge:active { transform: scale(0.95); }
 
-        /* Pages */
         .pages { display: none; animation: fadeIn 0.3s; padding: 20px; }
         .pages.active { display: block; }
         @keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
 
-        /* Cards */
         .quiz-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
         .quiz-card {
             height: 120px; border-radius: 20px; display: flex; flex-direction: column;
@@ -57,7 +51,6 @@
         .bg-gk { background: linear-gradient(135deg, #fdcb6e, #e17055); }
         .bg-isl { background: linear-gradient(135deg, #2ecc71, #27ae60); }
 
-        /* Leaderboard & Profile */
         .leaderboard-item {
             background: white; margin-bottom: 10px; padding: 15px; border-radius: 15px;
             display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
@@ -68,7 +61,6 @@
         }
         .profile-big-img { width: 100px; height: 100px; border-radius: 50%; border: 5px solid rgba(255,255,255,0.5); margin-bottom: 10px; }
 
-        /* Spin Wheel */
         .wheel-container { width: 280px; height: 280px; margin: 20px auto; position: relative; }
         .wheel {
             width: 100%; height: 100%; border-radius: 50%; border: 8px solid white;
@@ -85,9 +77,7 @@
             padding: 15px 50px; border-radius: 50px; font-size: 20px; font-weight: bold;
             margin-top: 20px; box-shadow: 0 6px 0 #b71540; cursor: pointer;
         }
-        .spin-btn:active { transform: translateY(4px); box-shadow: none; }
 
-        /* Bottom Nav */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; width: 100%; background: white; height: 70px;
             display: flex; justify-content: space-around; align-items: center;
@@ -97,7 +87,6 @@
         .nav-item.active { color: var(--primary); transform: translateY(-5px); }
         .nav-item i { font-size: 24px; margin-bottom: 5px; display: block; }
 
-        /* Modals */
         .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; justify-content:center; align-items:center; }
         .modal-content { background: white; width: 90%; max-width: 350px; padding: 20px; border-radius: 20px; text-align: center; }
         .quiz-option { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #dfe6e9; border-radius: 10px; background: #f5f6fa; font-weight: 600; cursor: pointer; }
@@ -117,14 +106,13 @@
                 <div style="font-size: 10px;">ID: <span id="headerId">...</span></div>
             </div>
         </div>
-        <!-- CLICK HERE FOR AUTO ADS -->
+        <!-- Click here to start background ads -->
         <div class="balance-badge" onclick="toggleAutoAds()">
             <i class="fas fa-coins" style="color: var(--gold);"></i> 
             <span id="headerBalance">0</span>
         </div>
     </div>
 
-    <!-- HOME -->
     <div id="home" class="pages active">
         <h3>কুইজ ক্যাটাগরি</h3>
         <div class="quiz-grid">
@@ -140,7 +128,6 @@
         </div>
     </div>
 
-    <!-- SPIN -->
     <div id="spin" class="pages">
         <h3 style="text-align: center;">লাকি স্পিন</h3>
         <p style="text-align: center;">আজকের স্পিন বাকি: <span id="spinCount" style="font-weight: bold; color: var(--primary);">0</span></p>
@@ -151,13 +138,11 @@
         <center><button class="spin-btn" id="spinTrigger" onclick="doSpin()">SPIN NOW</button></center>
     </div>
 
-    <!-- LEADERBOARD -->
     <div id="leaderboard" class="pages">
         <h3 style="text-align: center; color: var(--primary);">লিডারবোর্ড</h3>
         <div id="leaderboardList">Loading...</div>
     </div>
 
-    <!-- PROFILE -->
     <div id="profile" class="pages">
         <div class="profile-card">
             <img src="" id="profileImg" class="profile-big-img">
@@ -183,7 +168,6 @@
         </div>
     </div>
 
-    <!-- Bottom Nav -->
     <div class="bottom-nav">
         <div class="nav-item active" id="nav-home" onclick="navTo('home', 'nav-home')"><i class="fas fa-home"></i>হোম</div>
         <div class="nav-item" id="nav-spin" onclick="navTo('spin', 'nav-spin')"><i class="fas fa-dharmachakra"></i>স্পিন</div>
@@ -191,7 +175,6 @@
         <div class="nav-item" id="nav-profile" onclick="navTo('profile', 'nav-profile')"><i class="fas fa-user"></i>প্রোফাইল</div>
     </div>
 
-    <!-- Quiz Modal -->
     <div id="quizModal" class="modal">
         <div class="modal-content">
             <h3 id="qText">Question?</h3>
@@ -200,7 +183,6 @@
         </div>
     </div>
 
-    <!-- ফাইল লিঙ্ক -->
     <script src="data.js"></script>
     <script src="script.js"></script>
 
