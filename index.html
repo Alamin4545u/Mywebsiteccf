@@ -5,128 +5,76 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Quiz & Earn Pro</title>
     
-    <!-- Fonts & Icons -->
+    <!-- ফন্ট এবং স্টাইল -->
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Scripts -->
+    <!-- স্ক্রিপ্ট লাইব্রেরি -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Gigapub Ads -->
+    <!-- Gigapub Ads Script -->
     <script src="https://ad.gigapub.tech/script?id=4203"></script>
 
     <style>
-        :root {
-            --primary: #6C5CE7;
-            --accent: #00cec9;
-            --bg: #dfe6e9;
-            --card: #ffffff;
-            --text: #2d3436;
-            --gold: #ffd700;
-        }
-
+        :root { --primary: #6C5CE7; --bg: #dfe6e9; --text: #2d3436; --gold: #ffd700; }
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
-        body {
-            font-family: 'Hind Siliguri', sans-serif;
-            background: var(--bg);
-            margin: 0; padding: 0;
-            padding-bottom: 80px; /* Space for bottom nav */
-            color: var(--text);
-            overflow-x: hidden;
-        }
+        body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg); margin: 0; padding-bottom: 90px; color: var(--text); overflow-x: hidden; }
 
-        /* --- 3D Header --- */
+        /* Header */
         .header {
-            background: linear-gradient(135deg, #6C5CE7, #a29bfe);
-            padding: 15px 20px;
-            border-bottom-left-radius: 30px;
-            border-bottom-right-radius: 30px;
-            box-shadow: 0 10px 20px rgba(108, 92, 231, 0.3);
-            color: white;
-            display: flex; justify-content: space-between; align-items: center;
+            background: linear-gradient(135deg, #6C5CE7, #a29bfe); padding: 15px 20px;
+            border-radius: 0 0 30px 30px; box-shadow: 0 10px 20px rgba(108,92,231,0.3);
+            color: white; display: flex; justify-content: space-between; align-items: center;
             position: sticky; top: 0; z-index: 100;
         }
-        .user-info { display: flex; align-items: center; gap: 10px; }
-        .user-avatar { 
-            width: 45px; height: 45px; border-radius: 50%; 
-            border: 3px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            object-fit: cover;
-        }
+        .user-avatar { width: 45px; height: 45px; border-radius: 50%; border: 3px solid #fff; object-fit: cover; }
+        
+        /* Balance Badge - Clickable for Ads */
         .balance-badge {
-            background: rgba(255,255,255,0.2);
-            padding: 8px 15px; border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.4);
-            backdrop-filter: blur(5px);
-            font-weight: bold; display: flex; align-items: center; gap: 5px;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+            background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 20px;
+            backdrop-filter: blur(5px); font-weight: bold; display: flex; align-items: center; gap: 5px;
+            cursor: pointer; transition: transform 0.2s;
         }
+        .balance-badge:active { transform: scale(0.95); background: rgba(255,255,255,0.4); }
 
-        /* --- Navigation --- */
+        /* Pages */
         .pages { display: none; animation: fadeIn 0.3s; padding: 20px; }
         .pages.active { display: block; }
         @keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
 
-        /* --- Home Grid --- */
+        /* Cards */
         .quiz-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
         .quiz-card {
-            height: 120px; border-radius: 20px;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            color: white; font-weight: bold; font-size: 16px;
-            box-shadow: 0 8px 0 rgba(0,0,0,0.15), 0 15px 20px rgba(0,0,0,0.1);
-            transition: transform 0.1s; cursor: pointer; position: relative; overflow: hidden;
+            height: 120px; border-radius: 20px; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; color: white; font-weight: bold;
+            box-shadow: 0 8px 0 rgba(0,0,0,0.15); cursor: pointer; transition: 0.1s;
         }
-        .quiz-card:active { transform: translateY(8px); box-shadow: 0 0 0 rgba(0,0,0,0.15); }
+        .quiz-card:active { transform: translateY(5px); box-shadow: none; }
         .quiz-card i { font-size: 35px; margin-bottom: 10px; }
         
-        /* Colors */
-        .bg-bd { background: linear-gradient(135deg, #00b894, #00cec9); border-bottom: 6px solid #008b70; }
-        .bg-int { background: linear-gradient(135deg, #0984e3, #74b9ff); border-bottom: 6px solid #065fa3; }
-        .bg-gk { background: linear-gradient(135deg, #fdcb6e, #e17055); border-bottom: 6px solid #d35400; }
-        .bg-isl { background: linear-gradient(135deg, #2ecc71, #27ae60); border-bottom: 6px solid #1e8449; }
+        .bg-bd { background: linear-gradient(135deg, #00b894, #00cec9); }
+        .bg-int { background: linear-gradient(135deg, #0984e3, #74b9ff); }
+        .bg-gk { background: linear-gradient(135deg, #fdcb6e, #e17055); }
+        .bg-isl { background: linear-gradient(135deg, #2ecc71, #27ae60); }
 
-        /* --- Leaderboard 3D Design --- */
+        /* Leaderboard & Profile */
         .leaderboard-item {
-            background: #fff;
-            margin-bottom: 15px;
-            padding: 15px;
-            border-radius: 15px;
-            display: flex; align-items: center; justify-content: space-between;
-            box-shadow: 0 5px 0 #b2bec3, 0 10px 10px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
+            background: white; margin-bottom: 10px; padding: 15px; border-radius: 15px;
+            display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
-        .leaderboard-item:hover { transform: translateY(-3px); }
-        .rank-badge {
-            width: 30px; height: 30px; border-radius: 50%;
-            background: var(--bg); display: flex; justify-content: center; align-items: center;
-            font-weight: bold; color: var(--primary); margin-right: 10px;
-        }
-        .lb-user { display: flex; align-items: center; gap: 10px; flex-grow: 1; }
-        .lb-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); }
-        .top-1 { border: 2px solid #ffd700; background: linear-gradient(to right, #fff, #fffdf0); }
-        .top-1 .rank-badge { background: #ffd700; color: #fff; }
-
-        /* --- Profile 3D Design --- */
         .profile-card {
-            background: linear-gradient(135deg, #6C5CE7, #81ecec);
-            padding: 30px; border-radius: 25px; text-align: center; color: white;
-            box-shadow: 0 10px 25px rgba(108, 92, 231, 0.4);
-            margin-bottom: 20px;
+            background: linear-gradient(135deg, #6C5CE7, #81ecec); padding: 30px; border-radius: 25px;
+            text-align: center; color: white; box-shadow: 0 10px 25px rgba(108, 92, 231, 0.4); margin-bottom: 20px;
         }
-        .profile-big-img {
-            width: 100px; height: 100px; border-radius: 50%;
-            border: 5px solid rgba(255,255,255,0.5); margin-bottom: 10px;
-            object-fit: cover;
-        }
-        .stats-row { display: flex; justify-content: space-around; margin-top: 20px; background: rgba(0,0,0,0.1); padding: 10px; border-radius: 15px; }
-        
-        /* --- Spin Wheel --- */
+        .profile-big-img { width: 100px; height: 100px; border-radius: 50%; border: 5px solid rgba(255,255,255,0.5); margin-bottom: 10px; }
+
+        /* Spin Wheel */
         .wheel-container { width: 280px; height: 280px; margin: 20px auto; position: relative; }
         .wheel {
-            width: 100%; height: 100%; border-radius: 50%;
+            width: 100%; height: 100%; border-radius: 50%; border: 8px solid white;
             background: conic-gradient(#ff7675 0deg 60deg, #74b9ff 60deg 120deg, #55efc4 120deg 180deg, #ffeaa7 180deg 240deg, #a29bfe 240deg 300deg, #fd79a8 300deg 360deg);
-            border: 8px solid white; box-shadow: 0 0 15px rgba(0,0,0,0.2);
-            transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
+            transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1); box-shadow: 0 0 15px rgba(0,0,0,0.2);
         }
         .stopper {
             position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
@@ -134,56 +82,52 @@
             border-right: 15px solid transparent; border-top: 35px solid #2d3436; z-index: 10;
         }
         .spin-btn {
-            background: linear-gradient(to bottom, #ff7675, #d63031);
-            color: white; border: none; padding: 15px 50px; border-radius: 50px;
-            font-size: 20px; font-weight: bold; margin-top: 20px;
-            box-shadow: 0 6px 0 #b71540; cursor: pointer; width: 80%;
+            background: linear-gradient(to bottom, #ff7675, #d63031); color: white; border: none;
+            padding: 15px 50px; border-radius: 50px; font-size: 20px; font-weight: bold;
+            margin-top: 20px; box-shadow: 0 6px 0 #b71540; cursor: pointer;
         }
-        .spin-btn:active { transform: translateY(6px); box-shadow: none; }
+        .spin-btn:active { transform: translateY(4px); box-shadow: none; }
 
-        /* --- Bottom Nav --- */
+        /* Bottom Nav */
         .bottom-nav {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: white; height: 70px; display: flex; justify-content: space-around;
-            align-items: center; border-top-left-radius: 20px; border-top-right-radius: 20px;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 999;
+            position: fixed; bottom: 0; left: 0; width: 100%; background: white; height: 70px;
+            display: flex; justify-content: space-around; align-items: center;
+            border-radius: 20px 20px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 999;
         }
-        .nav-item {
-            text-align: center; color: #b2bec3; font-size: 12px; cursor: pointer;
-            transition: 0.2s;
-        }
-        .nav-item i { font-size: 24px; margin-bottom: 5px; display: block; }
+        .nav-item { text-align: center; color: #b2bec3; font-size: 12px; cursor: pointer; transition: 0.2s; }
         .nav-item.active { color: var(--primary); transform: translateY(-5px); }
+        .nav-item i { font-size: 24px; margin-bottom: 5px; display: block; }
 
-        /* --- Modals --- */
+        /* Modals */
         .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; justify-content:center; align-items:center; }
         .modal-content { background: white; width: 90%; max-width: 350px; padding: 20px; border-radius: 20px; text-align: center; }
-        .quiz-option { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #dfe6e9; border-radius: 10px; background: #f5f6fa; font-size: 16px; }
-        .quiz-option.correct { background: #55efc4; color: white; border-color: #00b894; }
-        .quiz-option.wrong { background: #ff7675; color: white; border-color: #d63031; }
-
+        .quiz-option { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #dfe6e9; border-radius: 10px; background: #f5f6fa; font-weight: 600; cursor: pointer; }
+        .quiz-option.correct { background: #55efc4; color: white; }
+        .quiz-option.wrong { background: #ff7675; color: white; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #ddd; }
+        .btn-full { width: 100%; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
     <div class="header">
-        <div class="user-info">
-            <img src="https://via.placeholder.com/50" id="headerImg" class="user-avatar">
+        <div style="display:flex; gap:10px; align-items:center;">
+            <img src="" id="headerImg" class="user-avatar">
             <div>
-                <div style="font-weight: bold; font-size: 14px;" id="headerName">Loading...</div>
-                <div style="font-size: 10px; opacity: 0.8;">ID: <span id="headerId">...</span></div>
+                <div style="font-weight: bold;" id="headerName">Loading...</div>
+                <div style="font-size: 10px;">ID: <span id="headerId">...</span></div>
             </div>
         </div>
-        <div class="balance-badge">
-            <i class="fas fa-coins" style="color: var(--gold);"></i>
+        <!-- CLICKABLE BADGE FOR AUTO ADS -->
+        <div class="balance-badge" onclick="toggleAutoAds()">
+            <i class="fas fa-coins" style="color: var(--gold);"></i> 
             <span id="headerBalance">0</span>
         </div>
     </div>
 
-    <!-- HOME PAGE -->
+    <!-- HOME -->
     <div id="home" class="pages active">
-        <h3 style="margin-bottom: 15px; color: var(--primary);">কুইজ ক্যাটাগরি</h3>
+        <h3>কুইজ ক্যাটাগরি</h3>
         <div class="quiz-grid">
             <div class="quiz-card bg-bd" onclick="startQuiz('bangladesh')"><i class="fas fa-flag"></i>বাংলাদেশ</div>
             <div class="quiz-card bg-int" onclick="startQuiz('international')"><i class="fas fa-globe"></i>আন্তর্জাতিক</div>
@@ -191,17 +135,16 @@
             <div class="quiz-card bg-isl" onclick="startQuiz('islamic')"><i class="fas fa-mosque"></i>ইসলামিক</div>
         </div>
         
-        <!-- 3D Spin Banner -->
-        <div style="margin-top: 30px; background: linear-gradient(45deg, #ff9ff3, #feca57); padding: 20px; border-radius: 20px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.1); cursor: pointer;" onclick="navTo('spin')">
-            <h2 style="margin: 0; color: white; text-shadow: 0 2px 5px rgba(0,0,0,0.2);">লাকি স্পিন হুইল</h2>
-            <p style="margin: 5px 0; color: #fff;">স্পিন করুন এবং জিতুন!</p>
+        <div style="margin-top: 30px; background: linear-gradient(45deg, #ff9ff3, #feca57); padding: 20px; border-radius: 20px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.1); cursor: pointer;" onclick="navTo('spin', 'nav-spin')">
+            <h2 style="color: white; margin:0;">লাকি স্পিন হুইল</h2>
+            <p style="color: white; margin:5px;">স্পিন করুন এবং জিতুন!</p>
         </div>
     </div>
 
-    <!-- SPIN PAGE -->
+    <!-- SPIN -->
     <div id="spin" class="pages">
         <h3 style="text-align: center;">লাকি স্পিন</h3>
-        <p style="text-align: center; color: #636e72;">আজকের স্পিন বাকি: <span id="spinCount" style="font-weight: bold; color: var(--primary);">0</span></p>
+        <p style="text-align: center;">আজকের স্পিন বাকি: <span id="spinCount" style="font-weight: bold; color: var(--primary);">0</span></p>
         <div class="wheel-container">
             <div class="stopper"></div>
             <div class="wheel" id="wheel"></div>
@@ -209,50 +152,44 @@
         <center><button class="spin-btn" id="spinTrigger" onclick="doSpin()">SPIN NOW</button></center>
     </div>
 
-    <!-- LEADERBOARD PAGE -->
+    <!-- LEADERBOARD -->
     <div id="leaderboard" class="pages">
-        <h3 style="text-align: center; color: var(--primary);">সেরা ১০ জন বিজয়ী</h3>
-        <div id="leaderboardList">
-            <p style="text-align:center;">লোড হচ্ছে...</p>
-        </div>
+        <h3 style="text-align: center; color: var(--primary);">লিডারবোর্ড</h3>
+        <div id="leaderboardList">Loading...</div>
     </div>
 
-    <!-- PROFILE PAGE -->
+    <!-- PROFILE -->
     <div id="profile" class="pages">
         <div class="profile-card">
             <img src="" id="profileImg" class="profile-big-img">
             <h2 id="profileName" style="margin: 0;">Name</h2>
-            <div class="stats-row">
-                <div>
-                    <div style="font-size: 20px; font-weight: bold;" id="profileBalanceDisp">0</div>
-                    <div style="font-size: 12px;">কয়েন</div>
-                </div>
-                <div>
-                    <div style="font-size: 20px; font-weight: bold;" id="profileQuizCount">0</div>
-                    <div style="font-size: 12px;">কুইজ খেলেছেন</div>
-                </div>
+            <div style="display: flex; justify-content: space-around; margin-top: 15px; background: rgba(0,0,0,0.1); padding: 10px; border-radius: 15px;">
+                <div><div style="font-size: 20px; font-weight: bold;" id="profileBalanceDisp">0</div><div style="font-size: 12px;">কয়েন</div></div>
+                <div><div style="font-size: 20px; font-weight: bold;" id="profileQuizCount">0</div><div style="font-size: 12px;">কুইজ খেলেছেন</div></div>
             </div>
         </div>
 
-        <h4 style="margin-bottom: 10px;">টাকা উত্তোলন করুন</h4>
+        <h4>টাকা উত্তোলন</h4>
         <div style="background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
-            <select id="wMethod" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 10px;">
+            <p style="font-size: 12px; color: #666;" id="rateText">Loading rate...</p>
+            <select id="wMethod">
                 <option value="bkash">বিকাশ</option>
                 <option value="nagad">নগদ</option>
                 <option value="rocket">রকেট</option>
+                <option value="recharge">মোবাইল রিচার্জ</option>
             </select>
-            <input type="number" id="wAmount" placeholder="পরিমাণ (মিনিমাম ৩০০০)" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 10px;">
-            <input type="text" id="wNumber" placeholder="মোবাইল নাম্বার" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 10px;">
-            <button onclick="submitWithdraw()" style="width: 100%; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 10px; font-weight: bold;">রিকোয়েস্ট পাঠান</button>
+            <input type="number" id="wAmount" placeholder="পরিমাণ">
+            <input type="text" id="wNumber" placeholder="মোবাইল নাম্বার">
+            <button class="btn-full" onclick="submitWithdraw()">রিকোয়েস্ট পাঠান</button>
         </div>
     </div>
 
-    <!-- Bottom Navigation -->
+    <!-- Bottom Nav -->
     <div class="bottom-nav">
-        <div class="nav-item active" onclick="navTo('home', this)"><i class="fas fa-home"></i>হোম</div>
-        <div class="nav-item" onclick="navTo('spin', this)"><i class="fas fa-dharmachakra"></i>স্পিন</div>
-        <div class="nav-item" onclick="navTo('leaderboard', this); loadLeaderboard();"><i class="fas fa-trophy"></i>লিডারবোর্ড</div>
-        <div class="nav-item" onclick="navTo('profile', this)"><i class="fas fa-user"></i>প্রোফাইল</div>
+        <div class="nav-item active" id="nav-home" onclick="navTo('home', 'nav-home')"><i class="fas fa-home"></i>হোম</div>
+        <div class="nav-item" id="nav-spin" onclick="navTo('spin', 'nav-spin')"><i class="fas fa-dharmachakra"></i>স্পিন</div>
+        <div class="nav-item" id="nav-leaderboard" onclick="navTo('leaderboard', 'nav-leaderboard'); loadLeaderboard();"><i class="fas fa-trophy"></i>টপ ১০</div>
+        <div class="nav-item" id="nav-profile" onclick="navTo('profile', 'nav-profile')"><i class="fas fa-user"></i>প্রোফাইল</div>
     </div>
 
     <!-- Quiz Modal -->
@@ -260,287 +197,13 @@
         <div class="modal-content">
             <h3 id="qText">Question?</h3>
             <div id="qOptions"></div>
-            <div style="margin-top: 10px; font-size: 12px;">প্রশ্ন: <span id="qIndex">1</span>/10</div>
+            <div style="margin-top: 10px; font-size: 12px;">প্রশ্ন: <span id="qIndex">1</span>/<span id="qTotal">5</span></div>
         </div>
     </div>
 
-    <script>
-        // --- CONFIGURATION ---
-        const SUPABASE_URL = 'https://uzrxrnqdozmuycxqtwkg.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6cnhybnFkb3ptdXljeHF0d2tnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0NzE1NzcsImV4cCI6MjA3OTA0NzU3N30.QttTbmRVeC7RsdHLJKIOccb4qTVCUEleZk3sIwHVVqQ';
-        
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+    <!-- ফাইল লিঙ্ক -->
+    <script src="data.js"></script>
+    <script src="script.js"></script>
 
-        // Variables
-        let user = { id: 0, first_name: 'Guest', photo_url: '' };
-        let dbUser = null;
-        let currentQuiz = [];
-        let quizIndex = 0;
-        let score = 0;
-
-        // --- INIT APP ---
-        async function init() {
-            // Telegram Data Fetching
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                user = tg.initDataUnsafe.user;
-            } else {
-                // Demo Data for Browser Testing
-                user = { id: 12345, first_name: 'Demo User', photo_url: 'https://via.placeholder.com/150' };
-            }
-
-            // Set UI Info
-            document.getElementById('headerName').innerText = user.first_name;
-            document.getElementById('headerId').innerText = user.id;
-            document.getElementById('profileName').innerText = user.first_name;
-            
-            // Profile Photo Logic
-            const photo = user.photo_url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-            document.getElementById('headerImg').src = photo;
-            document.getElementById('profileImg').src = photo;
-
-            await syncUser();
-        }
-
-        // --- DATABASE SYNC ---
-        async function syncUser() {
-            let { data, error } = await supabase.from('users').select('*').eq('telegram_id', user.id).single();
-
-            const today = new Date().toISOString().split('T')[0];
-
-            if (!data) {
-                // New User
-                const { data: newUser } = await supabase.from('users').insert([{
-                    telegram_id: user.id,
-                    first_name: user.first_name,
-                    photo_url: user.photo_url || '',
-                    last_active_date: today
-                }]).select().single();
-                dbUser = newUser;
-            } else {
-                // Existing User - Check Daily Spin Reset
-                if (data.last_active_date !== today) {
-                    await supabase.from('users').update({ spins_left: 10, last_active_date: today }).eq('telegram_id', user.id);
-                    data.spins_left = 10;
-                }
-                // Update Photo/Name if changed
-                if (data.photo_url !== user.photo_url) {
-                    await supabase.from('users').update({ photo_url: user.photo_url, first_name: user.first_name }).eq('telegram_id', user.id);
-                }
-                dbUser = data;
-            }
-            updateUI();
-        }
-
-        function updateUI() {
-            if(!dbUser) return;
-            document.getElementById('headerBalance').innerText = dbUser.balance;
-            document.getElementById('profileBalanceDisp').innerText = dbUser.balance;
-            document.getElementById('profileQuizCount').innerText = dbUser.quizzes_played;
-            document.getElementById('spinCount').innerText = dbUser.spins_left;
-        }
-
-        // --- NAVIGATION ---
-        function navTo(pageId, el) {
-            document.querySelectorAll('.pages').forEach(p => p.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            
-            if(el) {
-                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-                el.classList.add('active');
-            }
-        }
-
-        // --- LEADERBOARD LOGIC ---
-        async function loadLeaderboard() {
-            const list = document.getElementById('leaderboardList');
-            list.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> লোড হচ্ছে...</div>';
-
-            const { data, error } = await supabase
-                .from('users')
-                .select('first_name, balance, photo_url')
-                .order('balance', { ascending: false })
-                .limit(10);
-
-            if (data) {
-                list.innerHTML = '';
-                data.forEach((u, index) => {
-                    const photo = u.photo_url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-                    const rankClass = index === 0 ? 'top-1' : '';
-                    
-                    const html = `
-                    <div class="leaderboard-item ${rankClass}">
-                        <div class="lb-user">
-                            <div class="rank-badge">${index + 1}</div>
-                            <img src="${photo}" class="lb-img">
-                            <div style="font-weight:600;">${u.first_name}</div>
-                        </div>
-                        <div style="font-weight:bold; color: var(--primary);">
-                            ${u.balance} <i class="fas fa-coins" style="font-size:12px; color:#ffd700;"></i>
-                        </div>
-                    </div>`;
-                    list.innerHTML += html;
-                });
-            }
-        }
-
-        // --- QUIZ LOGIC ---
-        const quizDB = {
-            bangladesh: [
-                { q: "বাংলাদেশের রাজধানী?", o: ["ঢাকা", "খুলনা", "সিলেট", "রাজশাহী"], a: 0 },
-                { q: "বিজয় দিবস কবে?", o: ["২৬ মার্চ", "১৬ ডিসেম্বর", "২১ ফেব্রুয়ারি"], a: 1 },
-                { q: "জাতীয় ফুল কোনটি?", o: ["গোলাপ", "শাপলা", "পদ্ম", "জবা"], a: 1 },
-                { q: "জাতীয় কবি কে?", o: ["রবীন্দ্রনাথ", "নজরুল", "জসীমউদ্দীন"], a: 1 },
-                { q: "পদ্মা সেতুর দৈর্ঘ্য?", o: ["৬.১৫ কিমি", "৫ কিমি", "৪ কিমি"], a: 0 },
-                { q: "সবচেয়ে বড় জেলা?", o: ["ঢাকা", "রাঙ্গামাটি", "চট্টগ্রাম"], a: 1 },
-                { q: "বাংলাদেশের মুদ্রা?", o: ["রুপি", "টাকা", "ডলার"], a: 1 },
-                { q: "জাতীয় খেলা?", o: ["ফুটবল", "ক্রিকেট", "কাবাডি"], a: 2 },
-                { q: "সুন্দরবন কোথায়?", o: ["সিলেট", "খুলনা", "বরিশাল"], a: 1 },
-                { q: "মুজিবনগর কোথায়?", o: ["মেহেরপুর", "কুষ্টিয়া", "পাবনা"], a: 0 }
-            ],
-            international: [ { q: "সবচেয়ে বড় দেশ?", o: ["চীন", "রাশিয়া", "কানাডা"], a: 1 } ],
-            gk: [ { q: "মানুষের হাড় কয়টি?", o: ["২০৬", "৩০৬", "১০৬"], a: 0 } ],
-            islamic: [ { q: "কুরআনের সূরা কয়টি?", o: ["১১৪", "১১০", "১২০"], a: 0 } ]
-        };
-
-        function startQuiz(cat) {
-            currentQuiz = quizDB[cat] || quizDB['bangladesh'];
-            // Shuffle and take 10
-            currentQuiz = currentQuiz.sort(() => 0.5 - Math.random()).slice(0, 10);
-            quizIndex = 0;
-            score = 0;
-            document.getElementById('quizModal').style.display = "flex";
-            loadQuestion();
-        }
-
-        function loadQuestion() {
-            if (quizIndex >= currentQuiz.length) {
-                endQuiz();
-                return;
-            }
-            const q = currentQuiz[quizIndex];
-            document.getElementById('qText').innerText = q.q;
-            document.getElementById('qIndex').innerText = quizIndex + 1;
-            
-            const div = document.getElementById('qOptions');
-            div.innerHTML = '';
-            q.o.forEach((opt, i) => {
-                const btn = document.createElement('button');
-                btn.className = 'quiz-option';
-                btn.innerText = opt;
-                btn.onclick = () => checkAns(i, q.a, btn);
-                div.appendChild(btn);
-            });
-        }
-
-        function checkAns(sel, cor, btn) {
-            const all = document.querySelectorAll('.quiz-option');
-            all.forEach(b => b.disabled = true);
-            
-            if(sel === cor) {
-                btn.classList.add('correct');
-                score++;
-            } else {
-                btn.classList.add('wrong');
-                all[cor].classList.add('correct');
-            }
-            setTimeout(() => {
-                quizIndex++;
-                loadQuestion();
-            }, 1000);
-        }
-
-        function endQuiz() {
-            document.getElementById('quizModal').style.display = "none";
-            
-            // Show Ad
-            if(window.showGiga) {
-                window.showGiga().then(() => giveReward(score * 5)).catch(() => giveReward(score * 5));
-            } else {
-                giveReward(score * 5);
-            }
-        }
-
-        async function giveReward(amount) {
-            Swal.fire('অভিনন্দন!', `আপনি ${amount} কয়েন পেয়েছেন!`, 'success');
-            await supabase.from('users').update({ 
-                balance: dbUser.balance + amount,
-                quizzes_played: dbUser.quizzes_played + 1 
-            }).eq('telegram_id', user.id);
-            syncUser();
-        }
-
-        // --- SPIN LOGIC ---
-        function doSpin() {
-            if (dbUser.spins_left <= 0) {
-                Swal.fire('দুঃখিত', 'আজকের স্পিন শেষ!', 'error');
-                return;
-            }
-            const btn = document.getElementById('spinTrigger');
-            btn.disabled = true;
-            const wheel = document.getElementById('wheel');
-            
-            // Random rotation
-            const rot = Math.floor(3000 + Math.random() * 3000);
-            wheel.style.transform = `rotate(${rot}deg)`;
-
-            setTimeout(async () => {
-                // Reward Calc
-                const points = Math.floor(Math.random() * 50) + 10;
-                
-                // Ad Trigger
-                if(window.showGiga) {
-                    try { await window.showGiga(); } catch(e){}
-                }
-
-                await supabase.from('users').update({
-                    balance: dbUser.balance + points,
-                    spins_left: dbUser.spins_left - 1
-                }).eq('telegram_id', user.id);
-
-                Swal.fire('অভিনন্দন!', `আপনি ${points} কয়েন জিতেছেন!`, 'success');
-                syncUser();
-                
-                // Reset Wheel
-                wheel.style.transition = 'none';
-                wheel.style.transform = 'rotate(0deg)';
-                setTimeout(() => {
-                    wheel.style.transition = 'transform 4s cubic-bezier(0.33, 1, 0.68, 1)';
-                    btn.disabled = false;
-                }, 100);
-
-            }, 4000);
-        }
-
-        // --- WITHDRAW LOGIC ---
-        async function submitWithdraw() {
-            const amount = parseInt(document.getElementById('wAmount').value);
-            const number = document.getElementById('wNumber').value;
-            const method = document.getElementById('wMethod').value;
-
-            if(amount < 3000) return Swal.fire('Error', 'মিনিমাম ৩০০০ কয়েন লাগবে', 'error');
-            if(amount > dbUser.balance) return Swal.fire('Error', 'পর্যাপ্ত ব্যালেন্স নেই', 'error');
-            if(!number) return Swal.fire('Error', 'নাম্বার দিন', 'error');
-
-            // Deduct Balance
-            await supabase.from('users').update({ balance: dbUser.balance - amount }).eq('telegram_id', user.id);
-            
-            // Add Request
-            await supabase.from('withdrawals').insert([{
-                telegram_id: user.id,
-                amount: amount,
-                method: method,
-                number: number
-            }]);
-
-            syncUser();
-            Swal.fire('সফল!', 'আপনার রিকোয়েস্ট এডমিনের কাছে পাঠানো হয়েছে।', 'success');
-        }
-
-        // Start
-        window.onload = init;
-
-    </script>
 </body>
-</html>
+            </html>
