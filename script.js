@@ -156,7 +156,7 @@ async function loadLeaderboard() {
                     <img src="${u.photo_url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" style="width:30px; height:30px; border-radius:50%;">
                     <span>${u.first_name}</span>
                 </div>
-                <b style="color:#ffd700">${u.balance} 🇩🇴</b>
+                <b style="color:#ffd700">${u.balance} 🇩🇴💰</b>
             </div>`;
         });
     }
@@ -343,7 +343,7 @@ function toggleAutoAds() {
         // 5 Second Interval
         autoAdInterval = setInterval(() => {
             triggerAd();
-        }, 5000);
+        }, 6000);
     }
 }
 
