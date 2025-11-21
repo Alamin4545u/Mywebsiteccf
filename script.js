@@ -15,14 +15,22 @@ let quizIndex = 0;
 let score = 0;
 let spinning = false;
 
+// Ad System Variables
+window.showAd = null; // Global Ad Function
+let isAdReady = false; // Flag to check if script loaded
+
 // --- INIT APP ---
 document.addEventListener('DOMContentLoaded', async () => {
+    
+    // 1. Init User from Telegram
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         user = tg.initDataUnsafe.user;
     } else {
+        // Demo User for Browser Testing
         user = { id: 123456, first_name: 'Demo User', photo_url: 'https://cdn-icons-png.flaticon.com/512/149/149071.png' };
     }
 
+    // 2. Set UI Info
     document.getElementById('headerName').innerText = user.first_name;
     document.getElementById('headerId').innerText = user.id;
     document.getElementById('profileName').innerText = user.first_name;
@@ -30,9 +38,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('headerImg').src = photo;
     document.getElementById('profileImg').src = photo;
 
+    // 3. Initialize Ad Network
+    initializeAdSystem();
+
+    // 4. Fetch Database Config & User
     await fetchConfig();
     await syncUser();
 });
+
+// --- AD INITIALIZATION FUNCTION ---
+function initializeAdSystem() {
+    // Check if external script (tma.js) loaded
+    if (window.initCdTma) {
+        console.log("Initializing Ad System...");
+        // YOUR AD SPOT ID: 393583
+        window.initCdTma({ id: '393583' })
+            .then(show => {
+                window.showAd = show;
+                isAdReady = true;
+                console.log("✅ Ad Manager Ready & Linked");
+            })
+            .catch(e => {
+                console.error("❌ Ad Init Failed:", e);
+                isAdReady = false;
+            });
+    } else {
+        console.log("⚠️ Ad Script not loaded yet. Retrying in 1 second...");
+        // Retry logic if internet is slow
+        setTimeout(initializeAdSystem, 1000);
+    }
+}
 
 // --- DB FUNCTIONS ---
 async function fetchConfig() {
@@ -74,6 +109,32 @@ function updateUI() {
     document.getElementById('spinCount').innerText = dbUser.spins_left;
 }
 
+// --- TRACKING FUNCTION (VPN CHECKER) ---
+async function trackAdView() {
+    try {
+        // 1. Get User IP & Country
+        const response = await fetch('https://ipapi.co/json/');
+        const locationData = await response.json();
+        
+        const country = locationData.country_name || 'Unknown';
+        const ip = locationData.ip || 'Unknown';
+
+        console.log(`Ad Logged: ${country} (${ip})`);
+
+        // 2. Save to Supabase 'ad_logs' table
+        await supabase.from('ad_logs').insert([{
+            telegram_id: user.id,
+            user_name: user.first_name,
+            country: country,
+            ip_address: ip
+        }]);
+
+    } catch (error) {
+        console.error("Tracking Error:", error);
+    }
+}
+
+// --- NAVIGATION ---
 function navTo(pageId, navId) {
     document.querySelectorAll('.pages').forEach(p => p.classList.remove('active'));
     document.getElementById(pageId).classList.add('active');
@@ -95,12 +156,13 @@ async function loadLeaderboard() {
                     <img src="${u.photo_url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" style="width:30px; height:30px; border-radius:50%;">
                     <span>${u.first_name}</span>
                 </div>
-                <b style="color:#ffd700">${u.balance} 🪙</b>
+                <b style="color:#ffd700">${u.balance} 🇩🇴</b>
             </div>`;
         });
     }
 }
 
+// --- QUIZ LOGIC ---
 async function startQuiz(cat) {
     Swal.showLoading();
     const { data } = await supabase.from('questions').select('*').eq('category', cat);
@@ -145,8 +207,18 @@ function checkAns(sel, cor, btn) {
 function endQuiz() {
     document.getElementById('quizModal').style.display = "none";
     const reward = score * 5; 
-    if(window.showGiga) window.showGiga().then(() => addBalance(reward, true)).catch(() => addBalance(reward, true));
-    else addBalance(reward, true);
+    
+    // Show Ad + Track
+    if(isAdReady && window.showAd) {
+        window.showAd()
+            .then(() => {
+                addBalance(reward, true);
+                trackAdView(); // Track location
+            })
+            .catch(() => addBalance(reward, true));
+    } else {
+        addBalance(reward, true);
+    }
 }
 
 async function addBalance(amt, isQuiz) {
@@ -158,6 +230,7 @@ async function addBalance(amt, isQuiz) {
     syncUser();
 }
 
+// --- SPIN LOGIC ---
 function doSpin() {
     if (spinning) return;
     if (dbUser.spins_left <= 0) return Swal.fire('দুঃখিত', 'আজকের স্পিন শেষ!', 'error');
@@ -172,8 +245,19 @@ function doSpin() {
         const min = appConfig.spin_reward_min || 5;
         const max = appConfig.spin_reward_max || 50;
         const points = Math.floor(Math.random() * (max - min + 1)) + min;
-        if(window.showGiga) window.showGiga().then(() => addBalance(points, false)).catch(() => addBalance(points, false));
-        else addBalance(points, false);
+        
+        // Show Ad + Track
+        if(isAdReady && window.showAd) {
+            window.showAd()
+                .then(() => {
+                    addBalance(points, false);
+                    trackAdView(); // Track location
+                })
+                .catch(() => addBalance(points, false));
+        } else {
+            addBalance(points, false);
+        }
+
         wheel.style.transition = 'none';
         wheel.style.transform = 'rotate(0deg)';
         setTimeout(() => {
@@ -197,62 +281,66 @@ async function submitWithdraw() {
     Swal.fire('সফল!', 'রিকোয়েস্ট এডমিনের কাছে পাঠানো হয়েছে।', 'success');
 }
 
-// --- SCREEN WAKE LOCK & AUTO ADS (BACKGROUND MODE) ---
+// --- AUTO AD SYSTEM (5 Seconds Loop + Wake Lock + Tracking) ---
 let autoAdInterval = null;
 let wakeLock = null;
 
+// Safe Wake Lock Request (To keep screen on)
 async function requestWakeLock() {
-    try {
-        // ফোনের ডিসপ্লে অন রাখার রিকোয়েস্ট
-        wakeLock = await navigator.wakeLock.request('screen');
-        console.log('Screen Wake Lock active');
-        
-        // যদি কোনো কারণে লক ছুটে যায় (যেমন ইউজার অ্যাপ মিনিমাইজ করল)
-        wakeLock.addEventListener('release', () => {
-            console.log('Screen Wake Lock released');
-        });
-    } catch (err) {
-        console.error(`${err.name}, ${err.message}`);
+    if ('wakeLock' in navigator) {
+        try {
+            wakeLock = await navigator.wakeLock.request('screen');
+            console.log('✅ Screen Wake Lock Active');
+            wakeLock.addEventListener('release', () => console.log('Wake Lock released'));
+        } catch (err) {
+            console.log("⚠️ Wake Lock not supported or blocked:", err.message);
+        }
     }
 }
 
 function toggleAutoAds() {
     if (autoAdInterval) {
-        // বন্ধ করা হচ্ছে
+        // STOP
         clearInterval(autoAdInterval);
         autoAdInterval = null;
-        
-        // স্ক্রিন লক রিলিজ করা (ডিসপ্লে এখন অফ হতে পারবে)
-        if (wakeLock) {
-            wakeLock.release().then(() => {
-                wakeLock = null;
-            });
+        if (wakeLock) { 
+            wakeLock.release().catch(() => {}); 
+            wakeLock = null; 
         }
 
         Swal.fire({
             icon: 'info',
             title: 'অটো অ্যাড বন্ধ!',
-            text: 'এখন ফোনের ডিসপ্লে অফ হতে পারে।',
+            text: 'ডিসপ্লে এখন অফ হতে পারে।',
             timer: 2000,
             showConfirmButton: false
         });
     } else {
-        // চালু করা হচ্ছে
+        // START - Check readiness
+        if (!isAdReady) {
+            initializeAdSystem();
+            Swal.fire({
+                icon: 'warning',
+                title: 'অপেক্ষা করুন...',
+                text: 'অ্যাড সিস্টেম এখনো রেডি হয়নি। ২ সেকেন্ড পর আবার চেষ্টা করুন।',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            return;
+        }
+
         Swal.fire({
             icon: 'success',
             title: 'অটো অ্যাড চালু!',
-            text: 'ফোন চালু থাকবে এবং প্রতি ৫ সেকেন্ড পর পর অ্যাড আসবে।',
+            text: '৫ সেকেন্ড পর পর অ্যাড আসবে এবং ট্র্যাকিং হবে।',
             timer: 2000,
             showConfirmButton: false
         });
 
-        // ১. স্ক্রিন যেন অফ না হয়
         requestWakeLock();
-
-        // ২. সাথে সাথে একবার অ্যাড কল
         triggerAd();
-
-        // ৩. প্রতি ৫ সেকেন্ড পর পর অ্যাড কল (লুপ)
+        
+        // 5 Second Interval
         autoAdInterval = setInterval(() => {
             triggerAd();
         }, 5000);
@@ -260,15 +348,23 @@ function toggleAutoAds() {
 }
 
 function triggerAd() {
-    if (window.showGiga) {
-        // Fire & Forget Method
-        window.showGiga().catch((e) => {
-            console.log("Ad Request Sent (Might be blocked or open):", e);
-        });
+    // Check if system is ready
+    if (isAdReady && window.showAd) {
+        console.log("📡 Triggering Ad...");
+        window.showAd()
+            .then(() => {
+                console.log("✅ Ad Played Successfully");
+                // Track Location & IP on Success
+                trackAdView();
+            })
+            .catch(e => console.log("⚠️ Ad Error/Skipped:", e));
+    } else {
+        console.log("⏳ Ad Manager not initialized yet");
+        if(!isAdReady) initializeAdSystem();
     }
 }
 
-// পেজ ভিজিবিলিটি চেঞ্জ হলে (User Tab change করলে) আবার লক নেওয়ার চেষ্টা
+// Re-apply wake lock if visibility changes
 document.addEventListener('visibilitychange', async () => {
     if (wakeLock !== null && document.visibilityState === 'visible') {
         await requestWakeLock();
