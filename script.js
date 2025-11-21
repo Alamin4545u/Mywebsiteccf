@@ -240,4 +240,4 @@ function triggerAd() {
             console.log("Ad overlapped or error:", e);
         });
     }
-            }
+}
