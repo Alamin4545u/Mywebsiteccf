@@ -1,314 +1,311 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>CoinRush - Earn Crypto</title>
+  <title>BD Earn Pro - সহজে আয় করুন</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
   <style>
     :root {
-      --primary: #6C5CE7;
-      --secondary: #A29BFE;
-      --accent: #FF6B6B;
-      --dark: #121212;
-      --glass: rgba(255, 255, 255, 0.1);
-      --text: #FFFFFF;
+      --p: #6C5CE7; --s: #A29BFE; --g: #00D2A9; --r: #FF6B6B;
+      --glass: rgba(255,255,255,0.08);
+      --text: #fff;
     }
-    
-    * { margin:0; padding:0; box-sizing:border-box; }
+    * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
     body {
       background: linear-gradient(135deg, #0F0C29, #302B63, #24243E);
       color: var(--text);
-      font-family: 'Segoe UI', system-ui, sans-serif;
       min-height: 100vh;
       overflow-x: hidden;
     }
+    .container { padding: 15px; padding-bottom: 90px; }
     
-    .container {
-      padding: 20px;
-      padding-bottom: 100px;
-    }
-    
-    .header {
-      text-align: center;
-      margin-bottom: 30px;
-      padding-top: 20px;
-    }
-    
-    .logo {
-      width: 90px;
-      height: 90px;
-      background: linear-gradient(45deg, var(--primary), var(--secondary));
-      border-radius: 25px;
-      margin: 0 auto 15px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 10px 30px rgba(108, 92, 231, 0.4);
-    }
-    
-    h1 {
-      font-size: 28px;
-      font-weight: 800;
-      background: linear-gradient(90deg, #fff, var(--secondary));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    
-    .balance-card {
-      background: var(--glass);
-      backdrop-filter: blur(20px);
-      border-radius: 24px;
-      padding: 25px;
-      text-align: center;
-      border: 1px solid rgba(255,255,255,0.1);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-      margin-bottom: 25px;
-    }
-    
-    .balance {
-      font-size: 48px;
-      font-weight: 900;
-      background: linear-gradient(90deg, #FFD700, #FFA726);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin: 10px 0;
-    }
-    
-    .coin-animation {
-      width: 120px;
-      margin: 0 auto 20px;
-    }
-    
-    .btn {
-      background: linear-gradient(45deg, var(--primary), var(--secondary));
-      color: white;
-      border: none;
-      padding: 16px;
-      border-radius: 18px;
-      font-size: 16px;
-      font-weight: 700;
-      width: 100%;
-      margin: 12px 0;
-      cursor: pointer;
-      box-shadow: 0 10px 25px rgba(108, 92, 231, 0.4);
-      transition: all 0.3s;
-    }
-    
-    .btn:active {
-      transform: scale(0.95);
-    }
-    
-    .btn-success { background: linear-gradient(45deg, #00B894, #55EFC4); }
-    .btn-warning { background: linear-gradient(45deg, #FFA502, #FFD93D); }
-    .btn-danger { background: linear-gradient(45deg, #FF6B6B, #FF8E8E); }
-    
-    .section {
+    /* User Header */
+    .user-header {
       background: var(--glass);
       backdrop-filter: blur(20px);
       border-radius: 20px;
-      padding: 20px;
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
       margin-bottom: 20px;
       border: 1px solid rgba(255,255,255,0.1);
     }
-    
-    .task-item {
-      background: rgba(255,255,255,0.05);
-      padding: 18px;
-      border-radius: 16px;
-      margin: 12px 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      transition: all 0.3s;
+    .user-avatar {
+      width: 60px; height: 60px; border-radius: 50%; object-fit: cover;
+      border: 3px solid var(--s);
+      box-shadow: 0 0 20px rgba(162,155,254,0.5);
     }
-    
-    .task-item.completed {
-      opacity: 0.6;
+    .user-info h2 { font-size: 20px; }
+    .balance-big {
+      font-size: 36px; font-weight: 900;
+      background: linear-gradient(90deg, #FFD700, #FFA726);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-    
-    .refer-box {
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      padding: 20px;
-      border-radius: 20px;
-      text-align: center;
-      margin: 20px 0;
-    }
-    
-    .refer-link {
-      background: rgba(0,0,0,0.3);
-      padding: 12px;
-      border-radius: 12px;
-      margin: 15px 0;
-      word-break: break-all;
-      font-size: 14px;
-    }
-    
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(18, 18, 18, 0.9);
+
+    /* Tabs */
+    .tab { display: none; }
+    .tab.active { display: block; animation: fadeIn 0.6s; }
+    @keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:none;} }
+
+    /* Cards */
+    .card {
+      background: var(--glass);
       backdrop-filter: blur(20px);
-      padding: 15px 20px;
-      display: flex;
-      justify-content: space-around;
+      border-radius: 18px;
+      padding: 20px;
+      margin: 15px 0;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .btn {
+      background: linear-gradient(45deg, var(--p), var(--s));
+      color: white; border: none; padding: 16px;
+      border-radius: 16px; font-size: 16px; font-weight: bold;
+      width: 100%; margin: 10px 0; cursor: pointer;
+      box-shadow: 0 8px 25px rgba(108,92,231,0.4);
+      transition: 0.3s;
+    }
+    .btn:active { transform: scale(0.96); }
+    .btn-green { background: linear-gradient(45deg, #00B894, #55EFC4); }
+    .btn-red { background: linear-gradient(45deg, #FF6B6B, #FF8E8E); }
+
+    /* Bottom Nav */
+    .nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(18,18,18,0.95);
+      backdrop-filter: blur(20px);
+      padding: 12px 0;
+      display: flex; justify-content: space-around;
       border-top: 1px solid rgba(255,255,255,0.1);
     }
-    
     .nav-item {
-      text-align: center;
-      color: #aaa;
-      font-size: 12px;
+      text-align: center; color: #888; font-size: 11px; transition: 0.3s;
     }
-    
-    .nav-item.active {
-      color: var(--secondary);
+    .nav-item.active { color: var(--s); transform: scale(1.15); }
+    .nav-item svg { width: 28px; height: 28px; margin-bottom: 4px; }
+
+    /* Payment Methods */
+    .method-btn {
+      background: rgba(255,255,255,0.1);
+      padding: 15px; border-radius: 14px;
+      text-align: center; margin: 10px 0;
+      cursor: pointer; transition: 0.3s;
     }
-    
-    .nav-item svg {
-      width: 28px;
-      height: 28px;
-      margin-bottom: 5px;
+    .method-btn.active {
+      background: var(--g); color: black; font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Header -->
-    <div class="header">
-      <div class="logo">
-        <svg viewBox="0 0 100 100" fill="white">
-          <path d="M50 15 L70 35 L65 70 L35 70 L30 35 Z"/>
-          <circle cx="50" cy="45" r="12" fill="#FFD700"/>
-        </svg>
-      </div>
-      <h1>CoinRush</h1>
-      <p>Earn Crypto Daily</p>
-    </div>
 
-    <!-- Balance Card -->
-    <div class="balance-card">
-      <lottie-player class="coin-animation" src="https://assets5.lottiefiles.com/packages/lf20_7fvz39sz.json" background="transparent" speed="1" loop autoplay></lottie-player>
-      <div style="font-size:20px; opacity:0.8;">Total Balance</div>
-      <div class="balance" id="balance">1,248,500</div>
-      <div style="font-size:18px; opacity:0.9;">CRUSH Coins</div>
-    </div>
+<div class="container">
 
-    <!-- Daily Check-in -->
-    <div class="section">
-      <h2>🔥 Daily Check-in</h2>
-      <button class="btn btn-success" onclick="checkIn()">Claim +50,000 Coins</button>
-    </div>
-
-    <!-- Tasks -->
-    <div class="section">
-      <h2>📋 Tasks</h2>
-      <div class="task-item" onclick="completeTask(this, 100000)">
-        <div>
-          <strong>Join Our Channel</strong><br>
-          <small>Get 100,000 Coins</small>
-        </div>
-        <span style="font-size:24px;">➡️</span>
-      </div>
-      <div class="task-item" onclick="completeTask(this, 200000)">
-        <div>
-          <strong>Follow Twitter</strong><br>
-          <small>Get 200,000 Coins</small>
-        </div>
-        <span style="font-size:24px;">➡️</span>
-      </div>
-      <div class="task-item" onclick="completeTask(this, 500000)">
-        <div>
-          <strong>Watch Video Ad</strong><br>
-          <small>Get 500,000 Coins</small>
-        </div>
-        <span style="font-size:24px;">➡️</span>
-      </div>
-    </div>
-
-    <!-- Refer & Earn -->
-    <div class="refer-box">
-      <h2>🎁 Refer & Earn</h2>
-      <p>Invite friends & get 250,000 Coins per referral!</p>
-      <div class="refer-link" id="referLink">https://t.me/CoinRushBot?start=ref123456</div>
-      <button class="btn" onclick="share()">Invite Friends 🚀</button>
-    </div>
-
-    <!-- Withdraw -->
-    <div class="section">
-      <h2>💸 Withdraw</h2>
-      <button class="btn btn-warning" onclick="withdraw()">Withdraw to TON Wallet</button>
+  <!-- User Header -->
+  <div class="user-header">
+    <img id="userPhoto" class="user-avatar" src="https://t.me/i/userpic/320/unknown.jpg" alt="User">
+    <div>
+      <h2 id="userName">Loading...</h2>
+      <div class="balance-big" id="balance">0</div>
+      <small>পয়েন্ট</small>
     </div>
   </div>
 
-  <!-- Bottom Navigation -->
-  <div class="bottom-nav">
-    <div class="nav-item active">
-      <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 12h3v8h14v-8h3L12 2z"/></svg>
-      <div>Home</div>
-    </div>
-    <div class="nav-item">
-      <svg fill="currentColor" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-      <div>Earn</div>
-    </div>
-    <div class="nav-item">
-      <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-      <div>Friends</div>
-    </div>
-    <div class="nav-item">
-      <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-      <div>Tasks</div>
+  <!-- Tabs -->
+  <div id="home" class="tab active">
+    <div class="card">
+      <h2 style="text-align:center; margin-bottom:15px;">স্বাগতম! আজকের আয় শুরু করুন</h2>
+      <lottie-player src="https://assets8.lottiefiles.com/packages/lf20_kkflmtur.json" background="transparent" speed="1" style="width:100%;height:180px;" loop autoplay></lottie-player>
+      <button class="btn btn-green" onclick="openTab(event, 'earn')">আয় করুন →</button>
     </div>
   </div>
 
-  <script>
-    let balance = 1248500;
-    const balanceEl = document.getElementById("balance");
-    
-    // Telegram WebApp
-    Telegram.WebApp.ready();
-    Telegram.WebApp.expand();
-    
-    const user = Telegram.WebApp.initDataUnsafe.user;
-    document.getElementById("referLink").innerText = `https://t.me/CoinRushBot?start=ref${user?.id || '123456'}`;
+  <div id="earn" class="tab">
+    <h2 style="text-align:center; margin:20px 0;">আয় করার উপায়</h2>
+    <button class="btn" onclick="dailyCheckIn()">Daily Check-in (+500 পয়েন্ট)</button>
+    <button class="btn" onclick="spinWheel()">Spin Wheel চালান (+100-1000)</button>
+    <button class="btn" onclick="watchVideo()">ভিডিও দেখুন (+300 পয়েন্ট)</button>
+    <button class="btn" onclick="referFriend()">রেফার করুন (+1000/বন্ধু)</button>
+  </div>
 
-    function updateBalance() {
-      balanceEl.innerText = balance.toLocaleString();
+  <div id="wallet" class="tab">
+    <h2 style="text-align:center; margin:20px 0;">উইথড্র করুন</h2>
+    <div class="card">
+      <p>পেমেন্ট মেথড নির্বাচন করুন:</p>
+      <div class="method-btn active" onclick="selectMethod('bkash')">বিকাশ</div>
+      <div class="method-btn" onclick="selectMethod('nagad')">নগদ</div>
+      <div class="method-btn" onclick="selectMethod('rocket')">রকেট</div>
+
+      <p style="margin-top:20px;">পরিমাণ নির্বাচন করুন:</p>
+      <button class="btn" onclick="setAmount(1000, 10)">১০০০ পয়েন্ট = ১০ টাকা</button>
+      <button class="btn" onclick="setAmount(2000, 20)">২০০০ পয়েন্ট = ২০ টাকা</button>
+
+      <input type="text" id="phone" placeholder="আপনার নম্বর লিখুন (01xxxxxxxxx)" style="width:100%; padding:15px; margin:15px 0; border-radius:12px; border:none; background:rgba(255,255,255,0.1); color:white;" />
+
+      <button id="withdrawBtn" class="btn btn-red" onclick="requestWithdraw()" disabled>উইথড্র রিকোয়েস্ট পাঠান</button>
+      <p id="withdrawInfo" style="text-align:center; margin-top:10px; font-size:14px;"></p>
+    </div>
+  </div>
+
+  <div id="tasks" class="tab">
+    <h2 style="text-align:center; margin:20px 0;">আরো টাস্ক (শীঘ্রই আসছে)</h2>
+  </div>
+</div>
+
+<!-- Bottom Navigation -->
+<div class="nav">
+  <div class="nav-item active" onclick="openTab(event, 'home')">
+    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    <div>হোম</div>
+  </div>
+  <div class="nav-item" onclick="openTab(event, 'earn')">
+    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 12h3v8h6v-6h2v6h6v-8h3z"/></svg>
+    <div>আয়</div>
+  </div>
+  <div class="nav-item" onclick="openTab(event, 'wallet')">
+    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14c1.1 0 2 .9 2 2v1h-9a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h9z"/></svg>
+    <div>উইথড্র</div>
+  </div>
+  <div class="nav-item" onclick="openTab(event, 'tasks')">
+    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+    <div>টাস্ক</div>
+  </div>
+</div>
+
+<script>
+  let tg = window.Telegram.WebApp;
+  tg.ready(); tg.expand();
+
+  let user = tg.initDataUnsafe.user;
+  let balance = parseInt(localStorage.getItem("balance") || "0");
+  let selectedMethod = "bkash";
+  let selectedAmount = 0;
+  let selectedTaka = 0;
+
+  // User Info
+  document.getElementById("userName").innerText = user?.first_name || "User";
+  if (user?.photo_url) {
+    document.getElementById("userPhoto").src = user.photo_url;
+  }
+
+  // Update Balance
+  function updateBalance() {
+    document.getElementById("balance").innerText = balance.toLocaleString();
+    localStorage.setItem("balance", balance);
+  }
+  updateBalance();
+
+  // Tabs
+  function openTab(evt, tabName) {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.getElementById(tabName).classList.add("active");
+    document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+    evt.currentTarget.classList.add("active");
+  }
+
+  // Earn Functions
+  function dailyCheckIn() {
+    if (localStorage.getItem("lastCheckin") === new Date().toDateString()) {
+      alert("আজকে ইতিমধ্যে চেক-ইন করা হয়েছে!");
+      return;
     }
-
-    function checkIn() {
-      balance += 50000;
-      updateBalance();
-      Telegram.WebApp.HapticFeedback.notificationOccurred("success");
-      alert("🎉 Daily Check-in Successful! +50,000 Coins");
-    }
-
-    function completeTask(el, amount) {
-      if (el.classList.contains("completed")) return;
-      balance += amount;
-      updateBalance();
-      el.classList.add("completed");
-      el.innerHTML += '<span style="color:#55EFC4; font-weight:bold;"> ✓ Completed</span>';
-      Telegram.WebApp.HapticFeedback.notificationOccurred("success");
-    }
-
-    function share() {
-      const link = document.getElementById("referLink").innerText;
-      Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link + "\n\n🚀 Join CoinRush & Get 100K Bonus Coins!")}`);
-    }
-
-    function withdraw() {
-      Telegram.WebApp.showPopup({
-        title: "Withdraw",
-        message: "Coming Soon! Minimum: 1,000,000 Coins",
-        buttons: [{type: "ok"}]
-      });
-    }
-
+    balance += 500;
+    localStorage.setItem("lastCheckin", new Date().toDateString());
     updateBalance();
-  </script>
+    tg.HapticFeedback.notificationOccurred("success");
+    alert("চেক-ইন সফল! +500 পয়েন্ট");
+  }
+
+  function spinWheel() {
+    let win = [100, 200, 300, 500, 1000][Math.floor(Math.random()*5)];
+    balance += win;
+    updateBalance();
+    tg.HapticFeedback.notificationOccurred("success");
+    alert(`অভিনন্দন! আপনি জিতেছেন ${win} পয়েন্ট!`);
+  }
+
+  function watchVideo() {
+    balance += 300;
+    updateBalance();
+    tg.HapticFeedback.notificationOccurred("success");
+    alert("ভিডিও দেখা শেষ! +300 পয়েন্ট");
+  }
+
+  function referFriend() {
+    let refLink = `https://t.me/YourBotName?start=ref${user.id}`;
+    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(refLink + "\n\nবন্ধুকে আমন্ত্রণ করুন এবং ১০০০ পয়েন্ট পান!")}`);
+    balance += 1000;
+    updateBalance();
+    alert("রেফার লিংক শেয়ার করা হয়েছে! +1000 পয়েন্ট");
+  }
+
+  // Wallet Functions
+  function selectMethod(method) {
+    selectedMethod = method;
+    document.querySelectorAll(".method-btn").forEach(b => b.classList.remove("active"));
+    event.target.classList.add("active");
+    checkWithdrawReady();
+  }
+
+  function setAmount(points, taka) {
+    selectedAmount = points;
+    selectedTaka = taka;
+    document.getElementById("withdrawInfo").innerHTML = `নির্বাচিত: \( {points} পয়েন্ট = \){taka} টাকা`;
+    checkWithdrawReady();
+  }
+
+  function checkWithdrawReady() {
+    let phone = document.getElementById("phone").value.trim();
+    if (balance >= selectedAmount && selectedAmount > 0 && phone.length === 11) {
+      document.getElementById("withdrawBtn").disabled = false;
+    } else {
+      document.getElementById("withdrawBtn").disabled = true;
+    }
+  }
+
+  document.getElementById("phone").addEventListener("input", checkWithdrawReady);
+
+  function requestWithdraw() {
+    let phone = document.getElementById("phone").value.trim();
+    if (balance < selectedAmount) return alert("পয়েন্ট যথেষ্ট নেই!");
+    if (phone.length !== 11) return alert("সঠিক নম্বর দিন!");
+
+    // Send to Admin
+    let adminId = 123456789; // ← এখানে তোমার টেলিগ্রাম ID বসাও
+    let msg = `*নতুন উইথড্র রিকোয়েস্ট*\n\n` +
+              `ইউজার: \( {user.first_name} (@ \){user.username || 'NoUsername'})\n` +
+              `ID: ${user.id}\n` +
+              `পরিমাণ: \( {selectedAmount} পয়েন্ট = \){selectedTaka} টাকা\n` +
+              `মেথড: ${selectedMethod.toUpperCase()}\n` +
+              `নম্বর: ${phone}\n\n` +
+              `ব্যালেন্স ছিল: ${balance}`;
+
+    fetch(`https://api.telegram.org/botYOUR_BOT_TOKEN/sendMessage?chat_id=\( {adminId}&text= \){encodeURIComponent(msg)}&parse_mode=Markdown`)
+      .then(() => {
+        alert("উইথড্র রিকোয়েস্ট সফলভাবে পাঠানো হয়েছে! ২৪ ঘণ্টার মধ্যে পেমেন্ট পাবেন।");
+      });
+
+    // Deduct points
+    balance -= selectedAmount;
+    updateBalance();
+    document.getElementById("withdrawBtn").disabled = true;
+  }
+
+  // Admin Panel Link (Only for you)
+  if (user.id == 123456789) { // ← তোমার ID বসাও
+    setTimeout(() => {
+      tg.showPopup({
+        title: "অ্যাডমিন প্যানেল",
+        message: "আপনি অ্যাডমিন। অ্যাডমিন প্যানেলে যান?",
+        buttons: [{type: "default", text: "হ্যাঁ", id: "admin"}, {type: "cancel"}]
+      }, (btn) => {
+        if (btn === "admin") {
+          location.href = "https://your-admin-panel-link.com"; // ← তোমার অ্যাডমিন প্যানেল লিংক
+        }
+      });
+    }, 2000);
+  }
+</script>
 </body>
 </html>
