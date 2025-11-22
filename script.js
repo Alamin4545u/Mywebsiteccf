@@ -299,7 +299,7 @@ function toggleAutoAds() {
         
         autoAdInterval = setInterval(() => {
             triggerAd();
-        }, 5000);
+        }, 10000);
     }
 }
 
