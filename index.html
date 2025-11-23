@@ -115,17 +115,26 @@
         </div>
     </div>
 
-    <!-- REFERRAL PAGE -->
+    <!-- REFERRAL PAGE (UPDATED) -->
     <div id="referral" class="page-section px-4 text-center">
+        <!-- Refer Info -->
         <div class="glass-panel p-6 mt-4 relative">
             <img src="https://cdn-icons-png.flaticon.com/512/1256/1256650.png" class="w-20 mx-auto mb-4">
             <h2 class="text-xl font-bold mb-1">Invite & Earn</h2>
             <p class="text-xs text-gray-400 mb-4">Bonus: ৳<span id="ref-bonus">0</span> | Commission: <span id="ref-comm">0</span>%</p>
             <div class="bg-slate-900 border border-slate-700 rounded-xl p-3 flex justify-between items-center gap-2">
                 <p id="ref-link" class="text-xs text-blue-400 truncate w-full text-left">Loading...</p>
-                <button onclick="copyRef()" class="bg-slate-700 p-2 rounded text-white"><i class="fas fa-copy"></i></button>
+                <button onclick="copyRef()" class="bg-slate-700 p-2 rounded text-white hover:bg-slate-600"><i class="fas fa-copy"></i></button>
             </div>
             <p class="text-[10px] text-red-400 mt-3 text-left">* Fake referrals will lead to a ban.</p>
+        </div>
+
+        <!-- Referral List (NEW FEATURE) -->
+        <div class="mt-6 text-left">
+            <h3 class="font-bold text-sm text-gray-300 mb-3 pl-1 border-l-4 border-blue-500">&nbsp; Your Referrals</h3>
+            <div id="referral-list" class="space-y-2 max-h-60 overflow-y-auto">
+                <div class="text-center text-xs text-gray-500 py-4">No referrals yet.</div>
+            </div>
         </div>
     </div>
 
@@ -185,4 +194,4 @@
     <!-- LINKING THE OBFUSCATED SCRIPT -->
     <script src="script.js"></script>
 </body>
-        </html>
+    </html>
