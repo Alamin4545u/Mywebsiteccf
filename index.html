@@ -1,86 +1,71 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Giga Earn App</title>
+    <title>Giga Earn</title>
     
-    <!-- External Libraries -->
+    <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- GigaPub Ad Network -->
     <script src="https://ad.gigapub.tech/script?id=4413"></script>
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* Custom Styles */
-        body { background-color: #0f172a; color: #ffffff; font-family: 'Poppins', sans-serif; overflow-x: hidden; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { background-color: #0f172a; color: white; font-family: 'Poppins', sans-serif; overflow-x: hidden; -webkit-tap-highlight-color: transparent; user-select: none; }
         .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); }
-        
-        /* Navigation */
-        .nav-item { transition: all 0.3s ease; opacity: 0.6; }
         .nav-item.active { opacity: 1; transform: translateY(-5px); color: #3b82f6; }
-        .nav-dot { height: 4px; width: 4px; background-color: #3b82f6; border-radius: 50%; margin: 2px auto; opacity: 0; }
-        .nav-item.active .nav-dot { opacity: 1; }
+        .page-section { display: none; padding-bottom: 90px; animation: slideUp 0.3s ease-out; }
+        .page-section.active-page { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Interactive Elements */
+        .select-box { transition: 0.2s; border: 2px solid transparent; }
+        .select-box.active { border-color: #10b981; background: rgba(16, 185, 129, 0.1); position: relative; }
+        .select-box.active::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; top: -5px; right: -5px; background: #10b981; font-size: 10px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 
-        /* Selection */
-        .select-box { border: 2px solid transparent; transition: 0.2s; position: relative; }
-        .select-box.active { border-color: #10b981; background: rgba(16, 185, 129, 0.1); }
-        .select-box.active::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; top: -8px; right: -8px; background: #10b981; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+        /* Block Screen */
+        .block-screen { position: fixed; inset: 0; background: #0f172a; z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
 
         /* Spin Wheel */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 50; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; visibility: hidden; }
-        .modal-overlay.open { opacity: 1; pointer-events: all; visibility: visible; }
-        .wheel-container { width: 280px; height: 280px; border-radius: 50%; border: 5px solid #1e293b; box-shadow: 0 0 25px rgba(59, 130, 246, 0.6); position: relative; overflow: hidden; transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 50; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .wheel-container { width: 280px; height: 280px; border-radius: 50%; border: 5px solid #1e293b; box-shadow: 0 0 25px #3b82f6; position: relative; overflow: hidden; transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99); }
         .wheel-segment { width: 100%; height: 100%; background: conic-gradient(#ef4444 0deg 60deg, #f59e0b 60deg 120deg, #10b981 120deg 180deg, #3b82f6 180deg 240deg, #8b5cf6 240deg 300deg, #ec4899 300deg 360deg); border-radius: 50%; }
         .wheel-marker { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 25px solid white; z-index: 20; }
-
-        /* Page Animation */
-        .page-section { display: none; padding-bottom: 90px; animation: slideUp 0.4s ease-out; }
-        .page-section.active-page { display: block; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Block Screens */
-        .block-screen { position: fixed; inset: 0; background: #0f172a; z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
     </style>
 </head>
 <body>
 
-    <!-- VPN BLOCK SCREEN -->
+    <!-- VPN BLOCKER -->
     <div id="vpn-screen" class="block-screen">
-        <i class="fas fa-shield-alt text-6xl text-red-500 mb-4 animate-pulse"></i>
-        <h1 class="text-2xl font-bold text-red-400">VPN Required!</h1>
-        <p class="text-gray-300 mt-2 text-sm">কাজ করতে হলে অবশ্যই ভিপিএন কানেক্ট করুন।</p>
-        <div class="bg-slate-800 p-3 rounded mt-4">
-            <p class="text-xs text-gray-400">Allowed Countries:</p>
-            <p id="vpn-allowed-list" class="text-green-400 font-bold font-mono">loading...</p>
+        <i class="fas fa-shield-halved text-6xl text-red-500 mb-4 animate-pulse"></i>
+        <h1 class="text-2xl font-bold text-red-400">VPN Required</h1>
+        <p class="text-gray-400 mt-2 text-sm">Please connect to VPN to access tasks.</p>
+        <div class="bg-slate-800 p-4 rounded mt-4 w-full max-w-xs">
+            <p class="text-xs text-gray-500 uppercase">Allowed Countries</p>
+            <p id="vpn-allowed-list" class="text-green-400 font-bold text-lg font-mono tracking-wider">...</p>
         </div>
-        <button onclick="location.reload()" class="mt-8 bg-blue-600 px-8 py-3 rounded-full font-bold shadow-lg">Reload App</button>
+        <p class="text-xs text-gray-500 mt-4">Your IP: <span id="user-country-display" class="text-white">Checking...</span></p>
+        <button onclick="location.reload()" class="mt-8 bg-blue-600 px-8 py-3 rounded-full font-bold shadow-lg">Retry</button>
     </div>
 
     <!-- BAN SCREEN -->
-    <div id="ban-screen" class="block-screen bg-red-900/20">
-        <i class="fas fa-user-slash text-6xl text-red-500 mb-4"></i>
+    <div id="ban-screen" class="block-screen bg-red-950">
+        <i class="fas fa-ban text-6xl text-red-500 mb-4"></i>
         <h1 class="text-2xl font-bold text-white">Account Banned</h1>
-        <p class="text-red-300 mt-2">ফেইক রেফার বা অনিয়ম করার কারণে আপনার একাউন্ট ব্যান করা হয়েছে।</p>
-        <button onclick="openSupport()" class="mt-6 bg-slate-700 px-6 py-2 rounded-full text-sm">Contact Admin</button>
+        <p class="text-red-200 mt-2">Suspicious activity detected.</p>
+        <button onclick="openSupport()" class="mt-6 bg-white text-red-900 px-6 py-2 rounded-full font-bold">Contact Support</button>
     </div>
 
     <!-- HEADER -->
-    <div id="main-header" class="fixed top-0 w-full z-40 bg-[#0f172a]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex justify-between items-center shadow-lg">
+    <div id="app-header" class="fixed top-0 w-full z-40 bg-[#0f172a]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex justify-between items-center shadow-lg">
         <div class="flex items-center gap-3">
-            <div class="relative">
-                <img id="user-photo" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="w-10 h-10 rounded-full border border-slate-600">
-                <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border border-[#0f172a]"></div>
-            </div>
+            <img id="user-photo" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="w-10 h-10 rounded-full border border-slate-600">
             <div>
-                <h3 id="user-name" class="font-bold text-sm leading-tight">Guest</h3>
+                <h3 id="user-name" class="font-bold text-sm">Loading...</h3>
                 <span class="text-[10px] text-gray-400 bg-slate-800 px-1.5 py-0.5 rounded">ID: <span id="user-id">...</span></span>
             </div>
         </div>
@@ -89,142 +74,94 @@
             <p class="font-bold text-lg text-green-400 leading-none">৳<span id="header-balance">0.00</span></p>
         </div>
     </div>
-
     <div class="h-20"></div>
 
-    <!-- === HOME PAGE === -->
+    <!-- HOME PAGE -->
     <div id="home" class="page-section active-page px-4">
-        <!-- Dynamic Notice -->
-        <div class="bg-gradient-to-r from-amber-900/50 to-orange-900/50 border border-amber-600/30 rounded-xl p-3 mb-5 flex items-start gap-3">
-            <i class="fas fa-bullhorn text-amber-400 mt-1"></i>
-            <div class="text-xs text-amber-100/90 leading-relaxed w-full overflow-hidden">
-                <marquee scrollamount="4" id="home-notice">নোটিশ লোড হচ্ছে...</marquee>
+        <div class="bg-gradient-to-r from-amber-900/50 to-orange-900/50 border border-amber-600/30 rounded-xl p-3 mb-5 flex items-center gap-3">
+            <i class="fas fa-bullhorn text-amber-400"></i>
+            <div class="text-xs text-amber-100/90 w-full overflow-hidden">
+                <marquee scrollamount="4" id="home-notice">Loading...</marquee>
             </div>
         </div>
 
-        <!-- Daily Check-in -->
-        <div onclick="dailyTask()" class="glass-panel p-5 mb-5 flex justify-between items-center cursor-pointer active:scale-95 transition hover:bg-slate-800/50">
+        <div onclick="dailyCheckin()" class="glass-panel p-5 mb-5 flex justify-between items-center cursor-pointer active:scale-95 transition hover:bg-slate-800/50">
             <div>
                 <h2 class="text-lg font-bold text-white">Daily Check-in</h2>
-                <p class="text-xs text-gray-400 mt-1">বোনাস: ৳<span id="daily-reward-text">0</span></p>
+                <p class="text-xs text-gray-400 mt-1">Reward: ৳<span id="daily-text">0</span></p>
             </div>
-            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                <i class="fas fa-calendar-check text-xl"></i>
+            <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <i class="fas fa-gift text-xl"></i>
             </div>
         </div>
 
-        <!-- Quick Links -->
         <div class="grid grid-cols-2 gap-4">
-            <div onclick="openLeaderboard()" class="glass-panel p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-800/50">
-                <i class="fas fa-trophy text-3xl text-yellow-400"></i>
-                <div class="text-center"><h3 class="font-bold text-sm">Leaderboard</h3></div>
+            <div onclick="openLeaderboard()" class="glass-panel p-4 text-center cursor-pointer hover:bg-slate-800/50">
+                <i class="fas fa-trophy text-3xl text-yellow-400 mb-2"></i>
+                <h3 class="font-bold text-sm">Leaderboard</h3>
             </div>
-            <div onclick="openSupport()" class="glass-panel p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-800/50">
-                <i class="fab fa-telegram text-3xl text-sky-400"></i>
-                <div class="text-center"><h3 class="font-bold text-sm">Support</h3></div>
+            <div onclick="openSupport()" class="glass-panel p-4 text-center cursor-pointer hover:bg-slate-800/50">
+                <i class="fab fa-telegram text-3xl text-sky-400 mb-2"></i>
+                <h3 class="font-bold text-sm">Support</h3>
             </div>
         </div>
     </div>
 
-    <!-- === TASK PAGE (Sample Tasks) === -->
+    <!-- TASK PAGE -->
     <div id="task" class="page-section px-4">
-        <h2 class="text-lg font-bold mb-4 pl-2 border-l-4 border-blue-500">Sample Tasks</h2>
-        <div class="space-y-4">
-            <!-- Spin 1 (Sample) -->
-            <div class="glass-panel p-4 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center border border-purple-500/30">
-                        <i class="fas fa-dharmachakra text-purple-400 text-xl animate-spin-slow"></i>
-                    </div>
-                    <div><h3 class="font-bold text-sm">Silver Spin</h3><p class="text-[10px] text-gray-400">Win up to ৳2.00</p></div>
-                </div>
-                <button onclick="openSpinModal(1, 2.00)" class="bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-2 rounded-full text-xs font-bold">PLAY</button>
-            </div>
-            <!-- Spin 2 (Sample) -->
-            <div class="glass-panel p-4 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-full bg-pink-500/10 flex items-center justify-center border border-pink-500/30">
-                        <i class="fas fa-star text-pink-400 text-xl animate-pulse"></i>
-                    </div>
-                    <div><h3 class="font-bold text-sm">Golden Spin</h3><p class="text-[10px] text-gray-400">Win up to ৳5.00</p></div>
-                </div>
-                <button onclick="openSpinModal(2, 5.00)" class="bg-gradient-to-r from-pink-600 to-rose-600 px-5 py-2 rounded-full text-xs font-bold">PLAY</button>
-            </div>
-            <!-- Video Ad (Sample) -->
-            <div class="glass-panel p-4 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/30">
-                        <i class="fas fa-play text-red-400 text-lg pl-1"></i>
-                    </div>
-                    <div><h3 class="font-bold text-sm">Watch Video</h3><p class="text-[10px] text-gray-400">High Reward</p></div>
-                </div>
-                <button onclick="watchVideoTask(1.50)" class="bg-slate-700 hover:bg-slate-600 px-5 py-2 rounded-full text-xs font-bold border border-slate-500">WATCH</button>
-            </div>
+        <h2 class="text-lg font-bold mb-4 pl-2 border-l-4 border-blue-500">All Tasks</h2>
+        <div id="task-container" class="space-y-3 pb-10">
+            <div class="text-center text-gray-500 py-10">Loading Tasks...</div>
         </div>
     </div>
 
-    <!-- === REFERRAL PAGE === -->
+    <!-- REFERRAL PAGE -->
     <div id="referral" class="page-section px-4 text-center">
-        <div class="glass-panel p-6 mt-4 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-blue-600/20 rounded-full blur-3xl -mr-10 -mt-10"></div>
-            <img src="https://cdn-icons-png.flaticon.com/512/1256/1256650.png" class="w-20 mx-auto mb-4 drop-shadow-lg">
-            <h2 class="text-xl font-bold mb-2">Invite & Earn</h2>
-            <p class="text-xs text-gray-400 mb-2">
-                রেফার বোনাস: <span class="text-green-400 font-bold">৳<span id="ref-bonus-text">0</span></span> (ফিক্সড)<br>
-                কমিশন: <span class="text-yellow-400 font-bold"><span id="ref-comm-text">0</span>%</span> (লাইফটাইম)
-            </p>
-            <div class="bg-slate-900 border border-slate-700 rounded-xl p-3 flex items-center justify-between gap-2 mb-3">
+        <div class="glass-panel p-6 mt-4 relative">
+            <img src="https://cdn-icons-png.flaticon.com/512/1256/1256650.png" class="w-20 mx-auto mb-4">
+            <h2 class="text-xl font-bold mb-1">Invite & Earn</h2>
+            <p class="text-xs text-gray-400 mb-4">Bonus: ৳<span id="ref-bonus">0</span> | Commission: <span id="ref-comm">0</span>%</p>
+            <div class="bg-slate-900 border border-slate-700 rounded-xl p-3 flex justify-between items-center gap-2">
                 <p id="ref-link" class="text-xs text-blue-400 truncate w-full text-left">Loading...</p>
-                <button onclick="copyRefLink()" class="bg-slate-700 p-2.5 rounded-lg text-white"><i class="fas fa-copy"></i></button>
+                <button onclick="copyRef()" class="bg-slate-700 p-2 rounded text-white"><i class="fas fa-copy"></i></button>
             </div>
-            <div class="text-[10px] bg-red-500/10 border border-red-500/20 p-2 rounded text-red-300 text-left">
-                <i class="fas fa-exclamation-triangle"></i> একই ডিভাইসে একাধিক একাউন্ট করলে রেফার বোনাস পাবেন না এবং একাউন্ট ব্যান হবে।
-            </div>
+            <p class="text-[10px] text-red-400 mt-3 text-left">* Fake referrals will lead to a ban.</p>
         </div>
     </div>
 
-    <!-- === WALLET PAGE === -->
+    <!-- WALLET PAGE -->
     <div id="wallet" class="page-section px-4">
-        <div class="glass-panel p-6 text-center mb-6 relative overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10"></div>
-            <p class="text-gray-400 text-xs uppercase tracking-widest">Total Balance</p>
-            <h1 class="text-4xl font-bold mt-2 text-white">৳ <span id="wallet-balance">0.00</span></h1>
+        <div class="glass-panel p-6 text-center mb-6">
+            <p class="text-gray-400 text-xs uppercase">Balance</p>
+            <h1 class="text-4xl font-bold mt-2 text-green-400">৳ <span id="wallet-balance">0.00</span></h1>
         </div>
 
-        <!-- Dynamic Payment Methods -->
-        <h3 class="font-bold text-sm text-gray-300 mb-3 ml-1">Select Method</h3>
-        <div id="payment-methods-container" class="grid grid-cols-3 gap-3 mb-6">
-            <div class="text-xs text-gray-500">Loading methods...</div>
-        </div>
+        <h3 class="font-bold text-sm text-gray-300 mb-3 ml-1">Payment Method</h3>
+        <div id="method-container" class="grid grid-cols-3 gap-3 mb-6"></div>
 
-        <h3 class="font-bold text-sm text-gray-300 mb-3 ml-1">Select Amount</h3>
+        <h3 class="font-bold text-sm text-gray-300 mb-3 ml-1">Amount</h3>
         <div class="grid grid-cols-4 gap-2 mb-6">
-            <div onclick="selectAmount(20)" id="amt-20" class="select-box glass-panel py-3 text-center text-xs font-bold cursor-pointer">৳20</div>
-            <div onclick="selectAmount(50)" id="amt-50" class="select-box glass-panel py-3 text-center text-xs font-bold cursor-pointer">৳50</div>
-            <div onclick="selectAmount(100)" id="amt-100" class="select-box glass-panel py-3 text-center text-xs font-bold cursor-pointer">৳100</div>
-            <div onclick="selectAmount(200)" id="amt-200" class="select-box glass-panel py-3 text-center text-xs font-bold cursor-pointer">৳200</div>
+            <div onclick="setAmount(20)" id="amt-20" class="select-box glass-panel py-3 text-center text-xs font-bold cursor-pointer">৳20</div>
+            <div onclick="setAmount(50)" id="amt-50" class="select-box glass-panel py-3 text-center text-xs font-bold cursor-pointer">৳50</div>
+            <div onclick="setAmount(100)" id="amt-100" class="select-box glass-panel py-3 text-center text-xs font-bold cursor-pointer">৳100</div>
+            <div onclick="setAmount(200)" id="amt-200" class="select-box glass-panel py-3 text-center text-xs font-bold cursor-pointer">৳200</div>
         </div>
 
-        <div class="mb-6">
-            <div class="glass-panel flex items-center px-4 py-3 border focus-within:border-blue-500 transition">
-                <i class="fas fa-mobile-alt text-gray-500 mr-3"></i>
-                <input type="number" id="wallet-phone" placeholder="Mobile Number (017...)" class="bg-transparent w-full outline-none text-sm font-mono text-white placeholder-gray-500">
-            </div>
-        </div>
-        <button onclick="submitWithdraw()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 py-3.5 rounded-xl font-bold text-sm shadow-lg">SUBMIT REQUEST</button>
-
+        <input type="number" id="wallet-phone" placeholder="Mobile Number" class="w-full bg-slate-800 border border-slate-600 p-3 rounded-lg text-white mb-4 outline-none">
+        <button onclick="withdraw()" class="w-full bg-blue-600 py-3.5 rounded-xl font-bold text-sm shadow-lg active:scale-95 transition">WITHDRAW REQUEST</button>
+        
         <div class="mt-8">
-            <h3 class="font-bold text-sm text-gray-400 mb-3 pb-2 border-b border-slate-800">History</h3>
-            <div id="history-container" class="space-y-3"></div>
+            <h3 class="font-bold text-sm text-gray-400 mb-2">History</h3>
+            <div id="history-list" class="space-y-2"></div>
         </div>
     </div>
 
     <!-- BOTTOM NAV -->
-    <div class="fixed bottom-0 w-full bg-[#0f172a] border-t border-slate-800 flex justify-around items-end pb-6 pt-3 z-40 px-2">
-        <div onclick="switchTab('home', this)" class="nav-item active w-1/4 text-center cursor-pointer"><i class="fas fa-home text-xl mb-1"></i><p class="text-[10px]">Home</p><div class="nav-dot"></div></div>
-        <div onclick="switchTab('task', this)" class="nav-item w-1/4 text-center cursor-pointer"><i class="fas fa-gamepad text-xl mb-1"></i><p class="text-[10px]">Task</p><div class="nav-dot"></div></div>
-        <div onclick="switchTab('referral', this)" class="nav-item w-1/4 text-center cursor-pointer"><i class="fas fa-users text-xl mb-1"></i><p class="text-[10px]">Refer</p><div class="nav-dot"></div></div>
-        <div onclick="switchTab('wallet', this)" class="nav-item w-1/4 text-center cursor-pointer"><i class="fas fa-wallet text-xl mb-1"></i><p class="text-[10px]">Wallet</p><div class="nav-dot"></div></div>
+    <div class="fixed bottom-0 w-full bg-[#0f172a] border-t border-slate-800 flex justify-around items-end pb-6 pt-3 z-40">
+        <div onclick="nav('home', this)" class="nav-item active w-1/4 text-center cursor-pointer"><i class="fas fa-home text-xl"></i><p class="text-[10px]">Home</p></div>
+        <div onclick="nav('task', this)" class="nav-item w-1/4 text-center cursor-pointer"><i class="fas fa-tasks text-xl"></i><p class="text-[10px]">Task</p></div>
+        <div onclick="nav('referral', this)" class="nav-item w-1/4 text-center cursor-pointer"><i class="fas fa-user-plus text-xl"></i><p class="text-[10px]">Refer</p></div>
+        <div onclick="nav('wallet', this)" class="nav-item w-1/4 text-center cursor-pointer"><i class="fas fa-wallet text-xl"></i><p class="text-[10px]">Wallet</p></div>
     </div>
 
     <!-- SPIN MODAL -->
@@ -232,285 +169,20 @@
         <div class="flex flex-col items-center">
             <div class="wheel-marker"></div>
             <div class="wheel-container" id="wheel-element"><div class="wheel-segment"></div></div>
-            <button id="spin-trigger-btn" onclick="executeSpin()" class="mt-10 bg-gradient-to-r from-green-500 to-emerald-600 px-10 py-3 rounded-full font-bold text-lg animate-pulse">SPIN NOW</button>
-            <button onclick="closeSpinModal()" class="mt-6 text-gray-400 text-sm underline">Close</button>
+            <button id="spin-btn" onclick="executeSpin()" class="mt-10 bg-green-500 px-10 py-3 rounded-full font-bold animate-pulse">SPIN NOW</button>
+            <button onclick="document.getElementById('spin-modal').classList.remove('open')" class="mt-4 text-gray-400 underline">Close</button>
         </div>
     </div>
 
     <!-- LEADERBOARD MODAL -->
-    <div id="leaderboard-modal" class="modal-overlay z-[60]">
-        <div class="bg-[#1e293b] w-11/12 max-w-sm rounded-2xl p-5 border border-slate-700 shadow-2xl">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-yellow-400">Top Leaders</h3>
-                <button onclick="document.getElementById('leaderboard-modal').classList.remove('open')" class="text-gray-400"><i class="fas fa-times"></i></button>
-            </div>
-            <div id="lb-list" class="space-y-3 max-h-[300px] overflow-y-auto"><div class="text-center text-xs">Loading...</div></div>
+    <div id="leader-modal" class="modal-overlay z-[60]">
+        <div class="bg-[#1e293b] w-11/12 max-w-sm rounded-2xl p-5 border border-slate-700">
+            <div class="flex justify-between mb-4"><h3 class="font-bold text-yellow-400">Top Leaders</h3><button onclick="document.getElementById('leader-modal').classList.remove('open')"><i class="fas fa-times"></i></button></div>
+            <div id="lb-list" class="space-y-3 max-h-[300px] overflow-y-auto text-xs"></div>
         </div>
     </div>
 
-    <!-- LOGIC SCRIPT -->
-    <script>
-        // 1. DB INIT
-        const SUPABASE_URL = 'https://jnoavdzcbmskwoectioc.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impub2F2ZHpjYm1za3dvZWN0aW9jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4MDA4ODcsImV4cCI6MjA3OTM3Njg4N30.x3O1xvNMQfqLZ507nfgDcjFJ3faen-uq6l7mrx47NH8';
-        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // 2. TG INIT
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-
-        // 3. STATE
-        let currentUser = null;
-        let appConfig = {
-            vpn_required: 'false', allowed_countries: 'US,CA', home_notice: 'Welcome', 
-            refer_bonus_fixed: 0, refer_commission_percent: 0, daily_checkin_reward: 1,
-            bot_username: 'YourBot', support_link: ''
-        };
-        let currentSpinReward = 0;
-        let isSpinning = false;
-        let withdrawMethod = null;
-        let withdrawAmount = null;
-
-        // --- INITIALIZATION ---
-        async function initApp() {
-            // A. Load Config First
-            const { data: configData } = await db.from('app_config').select('*');
-            if(configData) {
-                configData.forEach(c => appConfig[c.key] = c.value);
-            }
-            
-            // Update UI with Config
-            document.getElementById('home-notice').innerText = appConfig.home_notice;
-            document.getElementById('daily-reward-text').innerText = appConfig.daily_checkin_reward;
-            document.getElementById('ref-bonus-text').innerText = appConfig.refer_bonus_fixed;
-            document.getElementById('ref-comm-text').innerText = appConfig.refer_commission_percent;
-            document.getElementById('vpn-allowed-list').innerText = appConfig.allowed_countries;
-
-            // B. VPN Check (Admin Controlled)
-            if(appConfig.vpn_required === 'true') {
-                try {
-                    const res = await fetch('https://ipapi.co/json/');
-                    const json = await res.json();
-                    const country = json.country_code || 'BD';
-                    const allowed = appConfig.allowed_countries.split(',').map(s => s.trim());
-                    
-                    if(!allowed.includes(country)) {
-                        document.getElementById('vpn-screen').style.display = 'flex';
-                        return; // Block App
-                    }
-                } catch(e) { console.log('IP API Error'); }
-            }
-
-            // C. Auth & Anti-Cheat
-            const tgUser = tg.initDataUnsafe.user || { id: 112233, first_name: "User", photo_url: "" };
-            const startParam = tg.initDataUnsafe.start_param;
-            
-            // Device ID Logic
-            let deviceId = localStorage.getItem('device_unique_id');
-            let isNewDevice = false;
-            if(!deviceId) {
-                deviceId = crypto.randomUUID();
-                localStorage.setItem('device_unique_id', deviceId);
-                isNewDevice = true;
-            }
-
-            // DB Check
-            const { data: existingUser } = await db.from('users').select('*').eq('telegram_id', tgUser.id).single();
-
-            if(!existingUser) {
-                // Check for Fake Account (Same Device ID used before)
-                const { data: duplicate } = await db.from('users').select('id').eq('device_id', deviceId);
-                let isFake = (duplicate && duplicate.length > 0);
-
-                // Insert New User
-                const { data: newUser } = await db.from('users').insert([{
-                    telegram_id: tgUser.id,
-                    first_name: tgUser.first_name,
-                    photo_url: tgUser.photo_url,
-                    device_id: deviceId,
-                    is_fake_account: isFake,
-                    referrer_id: (startParam && startParam != tgUser.id) ? startParam : null,
-                    balance: 0.00
-                }]).select().single();
-                
-                currentUser = newUser;
-
-                // Referral Bonus Logic (Only if not fake and referrer exists)
-                if(newUser.referrer_id) {
-                    if(!isFake) {
-                        // Genuine Refer: Give Fixed Bonus to Referrer
-                        const { data: refUser } = await db.from('users').select('balance').eq('telegram_id', newUser.referrer_id).single();
-                        if(refUser) {
-                            const bonus = parseFloat(appConfig.refer_bonus_fixed);
-                            await db.from('users').update({ balance: refUser.balance + bonus }).eq('telegram_id', newUser.referrer_id);
-                        }
-                    } else {
-                        // Fake Refer: Increment Fake Count for Admin view
-                        const { data: refUser } = await db.from('users').select('fake_ref_count').eq('telegram_id', newUser.referrer_id).single();
-                        if(refUser) {
-                            await db.from('users').update({ fake_ref_count: (refUser.fake_ref_count || 0) + 1 }).eq('telegram_id', newUser.referrer_id);
-                        }
-                    }
-                }
-            } else {
-                currentUser = existingUser;
-                // Check Ban Status
-                if(currentUser.is_banned) {
-                    document.getElementById('ban-screen').style.display = 'flex';
-                    return;
-                }
-                // Update Info
-                if(existingUser.first_name !== tgUser.first_name) {
-                    await db.from('users').update({ first_name: tgUser.first_name }).eq('telegram_id', tgUser.id);
-                }
-            }
-
-            updateUI();
-            loadPaymentMethods();
-            loadHistory();
-        }
-
-        function updateUI() {
-            if(!currentUser) return;
-            document.getElementById('user-name').innerText = currentUser.first_name;
-            document.getElementById('user-id').innerText = currentUser.telegram_id;
-            document.getElementById('user-photo').src = currentUser.photo_url || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-            document.getElementById('header-balance').innerText = parseFloat(currentUser.balance).toFixed(2);
-            document.getElementById('wallet-balance').innerText = parseFloat(currentUser.balance).toFixed(2);
-            document.getElementById('ref-link').innerText = `https://t.me/${appConfig.bot_username}?start=${currentUser.telegram_id}`;
-        }
-
-        // --- TASK & REWARDS ---
-        window.openSpinModal = function(type, rewardAmount) {
-            currentSpinReward = rewardAmount;
-            document.getElementById('spin-modal').classList.add('open');
-        }
-        window.closeSpinModal = function() { if(!isSpinning) document.getElementById('spin-modal').classList.remove('open'); }
-
-        window.executeSpin = function() {
-            if(isSpinning) return;
-            isSpinning = true;
-            document.getElementById('spin-trigger-btn').disabled = true;
-            
-            const wheel = document.getElementById('wheel-element');
-            wheel.style.transform = `rotate(${Math.floor(3000 + Math.random() * 3000)}deg)`;
-
-            setTimeout(() => {
-                if(window.showGiga) window.showGiga().then(() => giveReward(currentSpinReward));
-                else giveReward(currentSpinReward); // Fallback
-                
-                isSpinning = false;
-                wheel.style.transition = 'none'; wheel.style.transform = 'rotate(0deg)';
-                setTimeout(() => {
-                    wheel.style.transition = 'transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
-                    document.getElementById('spin-trigger-btn').disabled = false;
-                    closeSpinModal();
-                }, 100);
-            }, 4100);
-        }
-
-        window.watchVideoTask = function(amount) {
-            if(window.showGiga) window.showGiga().then(() => giveReward(amount));
-            else tg.showAlert("Ad loading...");
-        }
-
-        window.dailyTask = function() {
-            // Can add DB 'last_checkin' validation here
-            if(window.showGiga) window.showGiga().then(() => giveReward(appConfig.daily_checkin_reward));
-            else giveReward(appConfig.daily_checkin_reward);
-        }
-
-        async function giveReward(amount) {
-            const finalAmount = parseFloat(amount);
-            const newBal = parseFloat(currentUser.balance) + finalAmount;
-            
-            // 1. Update User Balance
-            const { data } = await db.from('users').update({ 
-                balance: newBal,
-                total_ads_viewed: (currentUser.total_ads_viewed || 0) + 1
-            }).eq('telegram_id', currentUser.telegram_id).select().single();
-            
-            // 2. Commission Logic (If Admin Set % > 0)
-            if(currentUser.referrer_id && appConfig.refer_commission_percent > 0) {
-                const comm = (finalAmount * parseFloat(appConfig.refer_commission_percent)) / 100;
-                // Fetch referrer to add balance
-                const { data: rUser } = await db.from('users').select('balance').eq('telegram_id', currentUser.referrer_id).single();
-                if(rUser) {
-                    await db.from('users').update({ balance: rUser.balance + comm }).eq('telegram_id', currentUser.referrer_id);
-                }
-            }
-
-            currentUser = data;
-            updateUI();
-            tg.showAlert(`You earned ৳${finalAmount.toFixed(2)}`);
-        }
-
-        // --- WALLET & METHODS ---
-        async function loadPaymentMethods() {
-            const { data: methods } = await db.from('payment_methods').select('*').eq('is_active', true);
-            const container = document.getElementById('payment-methods-container');
-            container.innerHTML = '';
-            
-            if(methods && methods.length > 0) {
-                methods.forEach(m => {
-                    container.innerHTML += `
-                    <div onclick="selectMethod('${m.name}')" id="opt-${m.name}" class="select-box glass-panel p-3 flex flex-col items-center justify-center cursor-pointer">
-                        <img src="${m.logo_url}" class="h-8 object-contain">
-                        <span class="text-[10px] mt-1 font-bold">${m.name}</span>
-                    </div>`;
-                });
-            } else {
-                container.innerHTML = '<div class="text-xs text-gray-500 col-span-3 text-center">No active methods</div>';
-            }
-        }
-
-        window.selectMethod = function(m) {
-            withdrawMethod = m;
-            document.querySelectorAll('.select-box').forEach(e => { if(e.id.startsWith('opt')) e.classList.remove('active'); });
-            document.getElementById(`opt-${m}`).classList.add('active');
-        }
-
-        window.selectAmount = function(a) {
-            withdrawAmount = a;
-            document.querySelectorAll('.select-box').forEach(e => { if(e.id.startsWith('amt')) e.classList.remove('active'); });
-            document.getElementById(`amt-${a}`).classList.add('active');
-        }
-
-        window.submitWithdraw = async function() {
-            const phone = document.getElementById('wallet-phone').value;
-            if(!withdrawMethod || !withdrawAmount || !phone) return tg.showAlert("Fill all details!");
-            if(currentUser.balance < withdrawAmount) return tg.showAlert("Low Balance!");
-
-            await db.from('users').update({ balance: currentUser.balance - withdrawAmount }).eq('telegram_id', currentUser.telegram_id);
-            await db.from('withdrawals').insert([{ telegram_id: currentUser.telegram_id, method: withdrawMethod, amount: withdrawAmount, number: phone }]);
-            
-            currentUser.balance -= withdrawAmount;
-            updateUI();
-            loadHistory();
-            tg.showAlert("Request Submitted!");
-        }
-
-        async function loadHistory() {
-            const { data } = await db.from('withdrawals').select('*').eq('telegram_id', currentUser.telegram_id).order('created_at', {ascending:false}).limit(5);
-            const c = document.getElementById('history-container');
-            c.innerHTML = '';
-            if(data) data.forEach(i => {
-                c.innerHTML += `<div class="glass-panel p-2 flex justify-between text-xs text-gray-300"><span>${i.method} - ৳${i.amount}</span><span class="${i.status=='paid'?'text-green-400':'text-yellow-400'} capitalize">${i.status}</span></div>`;
-            });
-        }
-
-        // --- EXTRAS ---
-        window.switchTab = (id, el) => { document.querySelectorAll('.page-section').forEach(p=>p.classList.remove('active-page')); document.getElementById(id).classList.add('active-page'); document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); el.classList.add('active'); }
-        window.copyRefLink = () => { navigator.clipboard.writeText(document.getElementById('ref-link').innerText); tg.showAlert("Link Copied!"); }
-        window.openSupport = () => { if(appConfig.support_link) tg.openTelegramLink(appConfig.support_link); }
-        window.openLeaderboard = async () => {
-            document.getElementById('leaderboard-modal').classList.add('open');
-            const { data } = await db.from('users').select('first_name, balance').order('balance', {ascending:false}).limit(5);
-            document.getElementById('lb-list').innerHTML = data.map((u,i)=>`<div class="flex justify-between bg-slate-800 p-2 rounded text-sm"><span>#${i+1} ${u.first_name}</span><span class="text-green-400">৳${u.balance.toFixed(2)}</span></div>`).join('');
-        }
-
-        // Start
-        initApp();
-    </script>
+    <!-- LINKING THE OBFUSCATED SCRIPT -->
+    <script src="script.js"></script>
 </body>
-</html>
+        </html>
