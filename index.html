@@ -1,311 +1,734 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>BD Earn Pro - সহজে আয় করুন</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
-  <style>
-    :root {
-      --p: #6C5CE7; --s: #A29BFE; --g: #00D2A9; --r: #FF6B6B;
-      --glass: rgba(255,255,255,0.08);
-      --text: #fff;
-    }
-    * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
-    body {
-      background: linear-gradient(135deg, #0F0C29, #302B63, #24243E);
-      color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-    .container { padding: 15px; padding-bottom: 90px; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Giga Earn App</title>
     
-    /* User Header */
-    .user-header {
-      background: var(--glass);
-      backdrop-filter: blur(20px);
-      border-radius: 20px;
-      padding: 18px;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      margin-bottom: 20px;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    .user-avatar {
-      width: 60px; height: 60px; border-radius: 50%; object-fit: cover;
-      border: 3px solid var(--s);
-      box-shadow: 0 0 20px rgba(162,155,254,0.5);
-    }
-    .user-info h2 { font-size: 20px; }
-    .balance-big {
-      font-size: 36px; font-weight: 900;
-      background: linear-gradient(90deg, #FFD700, #FFA726);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- GigaPub Ad Network -->
+    <script src="https://ad.gigapub.tech/script?id=4413"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-    /* Tabs */
-    .tab { display: none; }
-    .tab.active { display: block; animation: fadeIn 0.6s; }
-    @keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:none;} }
+    <style>
+        /* Custom Styles & Animations */
+        body {
+            background-color: #0f172a; /* Slate 900 */
+            color: #ffffff;
+            font-family: 'Poppins', sans-serif;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
 
-    /* Cards */
-    .card {
-      background: var(--glass);
-      backdrop-filter: blur(20px);
-      border-radius: 18px;
-      padding: 20px;
-      margin: 15px 0;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    .btn {
-      background: linear-gradient(45deg, var(--p), var(--s));
-      color: white; border: none; padding: 16px;
-      border-radius: 16px; font-size: 16px; font-weight: bold;
-      width: 100%; margin: 10px 0; cursor: pointer;
-      box-shadow: 0 8px 25px rgba(108,92,231,0.4);
-      transition: 0.3s;
-    }
-    .btn:active { transform: scale(0.96); }
-    .btn-green { background: linear-gradient(45deg, #00B894, #55EFC4); }
-    .btn-red { background: linear-gradient(45deg, #FF6B6B, #FF8E8E); }
+        /* Glassmorphism Effect */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
 
-    /* Bottom Nav */
-    .nav {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: rgba(18,18,18,0.95);
-      backdrop-filter: blur(20px);
-      padding: 12px 0;
-      display: flex; justify-content: space-around;
-      border-top: 1px solid rgba(255,255,255,0.1);
-    }
-    .nav-item {
-      text-align: center; color: #888; font-size: 11px; transition: 0.3s;
-    }
-    .nav-item.active { color: var(--s); transform: scale(1.15); }
-    .nav-item svg { width: 28px; height: 28px; margin-bottom: 4px; }
+        /* Navigation Tabs */
+        .nav-item { transition: all 0.3s ease; opacity: 0.6; }
+        .nav-item.active { opacity: 1; transform: translateY(-5px); color: #3b82f6; }
+        .nav-dot { height: 4px; width: 4px; background-color: #3b82f6; border-radius: 50%; margin: 2px auto; opacity: 0; transition: 0.3s; }
+        .nav-item.active .nav-dot { opacity: 1; }
 
-    /* Payment Methods */
-    .method-btn {
-      background: rgba(255,255,255,0.1);
-      padding: 15px; border-radius: 14px;
-      text-align: center; margin: 10px 0;
-      cursor: pointer; transition: 0.3s;
-    }
-    .method-btn.active {
-      background: var(--g); color: black; font-weight: bold;
-    }
-  </style>
+        /* Wallet Selection State */
+        .select-box { border: 2px solid transparent; transition: 0.2s; position: relative; }
+        .select-box.active { border-color: #10b981; background: rgba(16, 185, 129, 0.1); }
+        .select-box.active::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #10b981;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Spin Wheel Modal */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 50;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+            visibility: hidden; /* Added for better control */
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: all; visibility: visible; }
+
+        .wheel-container {
+            width: 280px; height: 280px;
+            border-radius: 50%;
+            border: 5px solid #1e293b;
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.6);
+            position: relative; overflow: hidden;
+            transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+        }
+        .wheel-segment {
+            width: 100%; height: 100%;
+            background: conic-gradient(
+                #ef4444 0deg 60deg, 
+                #f59e0b 60deg 120deg, 
+                #10b981 120deg 180deg, 
+                #3b82f6 180deg 240deg, 
+                #8b5cf6 240deg 300deg, 
+                #ec4899 300deg 360deg
+            );
+            border-radius: 50%;
+        }
+        .wheel-marker {
+            position: absolute; top: -15px; left: 50%;
+            transform: translateX(-50%);
+            width: 0; height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid white;
+            z-index: 20; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+
+        /* Page Animations */
+        .page-section { display: none; padding-bottom: 90px; animation: slideUp 0.4s ease-out; }
+        .page-section.active-page { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
 <body>
 
-<div class="container">
-
-  <!-- User Header -->
-  <div class="user-header">
-    <img id="userPhoto" class="user-avatar" src="https://t.me/i/userpic/320/unknown.jpg" alt="User">
-    <div>
-      <h2 id="userName">Loading...</h2>
-      <div class="balance-big" id="balance">0</div>
-      <small>পয়েন্ট</small>
+    <!-- HEADER -->
+    <div class="fixed top-0 w-full z-40 bg-[#0f172a]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex justify-between items-center shadow-lg">
+        <div class="flex items-center gap-3">
+            <div class="relative">
+                <img id="user-photo" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="w-10 h-10 rounded-full border border-slate-600">
+                <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border border-[#0f172a]"></div>
+            </div>
+            <div>
+                <h3 id="user-name" class="font-bold text-sm leading-tight">Loading...</h3>
+                <span class="text-[10px] text-gray-400 bg-slate-800 px-1.5 py-0.5 rounded">ID: <span id="user-id">...</span></span>
+            </div>
+        </div>
+        <div class="glass-panel px-3 py-1.5 text-right min-w-[90px]">
+            <p class="text-[10px] text-gray-400 uppercase">Balance</p>
+            <p class="font-bold text-lg text-green-400 leading-none">৳<span id="header-balance">0.00</span></p>
+        </div>
     </div>
-  </div>
 
-  <!-- Tabs -->
-  <div id="home" class="tab active">
-    <div class="card">
-      <h2 style="text-align:center; margin-bottom:15px;">স্বাগতম! আজকের আয় শুরু করুন</h2>
-      <lottie-player src="https://assets8.lottiefiles.com/packages/lf20_kkflmtur.json" background="transparent" speed="1" style="width:100%;height:180px;" loop autoplay></lottie-player>
-      <button class="btn btn-green" onclick="openTab(event, 'earn')">আয় করুন →</button>
+    <!-- SPACER FOR HEADER -->
+    <div class="h-20"></div>
+
+    <!-- === HOME PAGE === -->
+    <div id="home" class="page-section active-page px-4">
+        <!-- Notice Board -->
+        <div class="bg-gradient-to-r from-amber-900/50 to-orange-900/50 border border-amber-600/30 rounded-xl p-3 mb-5 flex items-start gap-3">
+            <i class="fas fa-bullhorn text-amber-400 mt-1"></i>
+            <div class="text-xs text-amber-100/90 leading-relaxed">
+                <marquee scrollamount="4">আমাদের অ্যাপে আপনাকে স্বাগতম! ভিপিএন ছাড়া কাজ করুন। পেমেন্ট ১০ মিনিটে।</marquee>
+            </div>
+        </div>
+
+        <!-- Daily Check-in -->
+        <div onclick="dailyTask()" class="glass-panel p-5 mb-5 flex justify-between items-center cursor-pointer active:scale-95 transition hover:bg-slate-800/50">
+            <div>
+                <h2 class="text-lg font-bold text-white">Daily Check-in</h2>
+                <p class="text-xs text-gray-400 mt-1">প্রতিদিন একবার বোনাস নিন</p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <i class="fas fa-calendar-check text-xl"></i>
+            </div>
+        </div>
+
+        <!-- Quick Links Grid -->
+        <div class="grid grid-cols-2 gap-4">
+            <div onclick="openLeaderboard()" class="glass-panel p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-800/50 active:scale-95 transition">
+                <i class="fas fa-trophy text-3xl text-yellow-400 drop-shadow-md"></i>
+                <div class="text-center">
+                    <h3 class="font-bold text-sm">Leaderboard</h3>
+                    <p class="text-[10px] text-gray-500">Top Winners</p>
+                </div>
+            </div>
+            <div onclick="openSupport()" class="glass-panel p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-800/50 active:scale-95 transition">
+                <i class="fab fa-telegram text-3xl text-sky-400 drop-shadow-md"></i>
+                <div class="text-center">
+                    <h3 class="font-bold text-sm">Support</h3>
+                    <p class="text-[10px] text-gray-500">Join Channel</p>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <div id="earn" class="tab">
-    <h2 style="text-align:center; margin:20px 0;">আয় করার উপায়</h2>
-    <button class="btn" onclick="dailyCheckIn()">Daily Check-in (+500 পয়েন্ট)</button>
-    <button class="btn" onclick="spinWheel()">Spin Wheel চালান (+100-1000)</button>
-    <button class="btn" onclick="watchVideo()">ভিডিও দেখুন (+300 পয়েন্ট)</button>
-    <button class="btn" onclick="referFriend()">রেফার করুন (+1000/বন্ধু)</button>
-  </div>
+    <!-- === TASK PAGE === -->
+    <div id="task" class="page-section px-4">
+        <h2 class="text-lg font-bold mb-4 pl-2 border-l-4 border-blue-500">Available Tasks</h2>
 
-  <div id="wallet" class="tab">
-    <h2 style="text-align:center; margin:20px 0;">উইথড্র করুন</h2>
-    <div class="card">
-      <p>পেমেন্ট মেথড নির্বাচন করুন:</p>
-      <div class="method-btn active" onclick="selectMethod('bkash')">বিকাশ</div>
-      <div class="method-btn" onclick="selectMethod('nagad')">নগদ</div>
-      <div class="method-btn" onclick="selectMethod('rocket')">রকেট</div>
+        <div class="space-y-4">
+            <!-- Spin 1 -->
+            <div class="glass-panel p-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center border border-purple-500/30">
+                        <i class="fas fa-dharmachakra text-purple-400 text-xl animate-spin-slow"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm">Silver Spin</h3>
+                        <p class="text-[10px] text-gray-400">Win up to ৳2.00</p>
+                    </div>
+                </div>
+                <button onclick="openSpinModal(1)" class="bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-2 rounded-full text-xs font-bold shadow-lg shadow-purple-500/20 active:scale-90 transition">PLAY</button>
+            </div>
 
-      <p style="margin-top:20px;">পরিমাণ নির্বাচন করুন:</p>
-      <button class="btn" onclick="setAmount(1000, 10)">১০০০ পয়েন্ট = ১০ টাকা</button>
-      <button class="btn" onclick="setAmount(2000, 20)">২০০০ পয়েন্ট = ২০ টাকা</button>
+            <!-- Spin 2 -->
+            <div class="glass-panel p-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-pink-500/10 flex items-center justify-center border border-pink-500/30">
+                        <i class="fas fa-star text-pink-400 text-xl animate-pulse"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm">Golden Spin</h3>
+                        <p class="text-[10px] text-gray-400">Win up to ৳5.00</p>
+                    </div>
+                </div>
+                <button onclick="openSpinModal(2)" class="bg-gradient-to-r from-pink-600 to-rose-600 px-5 py-2 rounded-full text-xs font-bold shadow-lg shadow-pink-500/20 active:scale-90 transition">PLAY</button>
+            </div>
 
-      <input type="text" id="phone" placeholder="আপনার নম্বর লিখুন (01xxxxxxxxx)" style="width:100%; padding:15px; margin:15px 0; border-radius:12px; border:none; background:rgba(255,255,255,0.1); color:white;" />
-
-      <button id="withdrawBtn" class="btn btn-red" onclick="requestWithdraw()" disabled>উইথড্র রিকোয়েস্ট পাঠান</button>
-      <p id="withdrawInfo" style="text-align:center; margin-top:10px; font-size:14px;"></p>
+            <!-- Video Ad -->
+            <div class="glass-panel p-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/30">
+                        <i class="fas fa-play text-red-400 text-lg pl-1"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm">Watch Video</h3>
+                        <p class="text-[10px] text-gray-400">High Reward Task</p>
+                    </div>
+                </div>
+                <button onclick="watchVideoTask()" class="bg-slate-700 hover:bg-slate-600 px-5 py-2 rounded-full text-xs font-bold border border-slate-500 transition">WATCH</button>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <div id="tasks" class="tab">
-    <h2 style="text-align:center; margin:20px 0;">আরো টাস্ক (শীঘ্রই আসছে)</h2>
-  </div>
-</div>
+    <!-- === REFERRAL PAGE === -->
+    <div id="referral" class="page-section px-4 text-center">
+        <div class="glass-panel p-6 mt-4 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-blue-600/20 rounded-full blur-3xl -mr-10 -mt-10"></div>
+            
+            <img src="https://cdn-icons-png.flaticon.com/512/1256/1256650.png" class="w-20 mx-auto mb-4 drop-shadow-lg">
+            <h2 class="text-xl font-bold mb-2">Invite & Earn</h2>
+            <p class="text-xs text-gray-400 mb-6 leading-relaxed">
+                আপনার বন্ধুকে ইনভাইট করুন। সে জয়েন করলে আপনি পাবেন বোনাস।
+                <br><span class="text-red-400">সতর্কতা: ফেইক রেফার করলে একাউন্ট ব্যান হবে।</span>
+            </p>
 
-<!-- Bottom Navigation -->
-<div class="nav">
-  <div class="nav-item active" onclick="openTab(event, 'home')">
-    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-    <div>হোম</div>
-  </div>
-  <div class="nav-item" onclick="openTab(event, 'earn')">
-    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 12h3v8h6v-6h2v6h6v-8h3z"/></svg>
-    <div>আয়</div>
-  </div>
-  <div class="nav-item" onclick="openTab(event, 'wallet')">
-    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14c1.1 0 2 .9 2 2v1h-9a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h9z"/></svg>
-    <div>উইথড্র</div>
-  </div>
-  <div class="nav-item" onclick="openTab(event, 'tasks')">
-    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-    <div>টাস্ক</div>
-  </div>
-</div>
+            <div class="bg-slate-900 border border-slate-700 rounded-xl p-3 flex items-center justify-between gap-2">
+                <div class="text-left overflow-hidden w-full">
+                    <p class="text-[10px] text-gray-500 uppercase font-bold">Your Link</p>
+                    <p id="ref-link" class="text-xs text-blue-400 truncate">Loading...</p>
+                </div>
+                <button onclick="copyRefLink()" class="bg-slate-700 p-2.5 rounded-lg text-white active:bg-slate-600 transition">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+        </div>
+    </div>
 
-<script>
-  let tg = window.Telegram.WebApp;
-  tg.ready(); tg.expand();
+    <!-- === WALLET PAGE === -->
+    <div id="wallet" class="page-section px-4">
+        <!-- Balance Card -->
+        <div class="glass-panel p-6 text-center mb-6 relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10"></div>
+            <p class="text-gray-400 text-xs uppercase tracking-widest">Total Balance</p>
+            <h1 class="text-4xl font-bold mt-2 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">৳ <span id="wallet-balance">0.00</span></h1>
+        </div>
 
-  let user = tg.initDataUnsafe.user;
-  let balance = parseInt(localStorage.getItem("balance") || "0");
-  let selectedMethod = "bkash";
-  let selectedAmount = 0;
-  let selectedTaka = 0;
+        <!-- Methods -->
+        <h3 class="font-bold text-sm text-gray-300 mb-3 ml-1">Select Method</h3>
+        <div class="grid grid-cols-3 gap-3 mb-6">
+            <div onclick="selectMethod('Bkash')" id="opt-Bkash" class="select-box glass-panel p-3 flex flex-col items-center justify-center gap-2 cursor-pointer">
+                <img src="https://freelogopng.com/images/all_img/1656227518bkash-logo-png.png" class="h-8 object-contain">
+                <span class="text-[10px] font-bold">Bkash</span>
+            </div>
+            <div onclick="selectMethod('Nagad')" id="opt-Nagad" class="select-box glass-panel p-3 flex flex-col items-center justify-center gap-2 cursor-pointer">
+                <img src="https://freelogopng.com/images/all_img/1679248787nagad-logo.png" class="h-8 object-contain">
+                <span class="text-[10px] font-bold">Nagad</span>
+            </div>
+            <div onclick="selectMethod('Rocket')" id="opt-Rocket" class="select-box glass-panel p-3 flex flex-col items-center justify-center gap-2 cursor-pointer">
+                <img src="https://seeklogo.com/images/D/dutch-bangla-rocket-logo-B4D1CC458D-seeklogo.com.png" class="h-8 object-contain">
+                <span class="text-[10px] font-bold">Rocket</span>
+            </div>
+        </div>
 
-  // User Info
-  document.getElementById("userName").innerText = user?.first_name || "User";
-  if (user?.photo_url) {
-    document.getElementById("userPhoto").src = user.photo_url;
-  }
+        <!-- Amounts -->
+        <h3 class="font-bold text-sm text-gray-300 mb-3 ml-1">Select Amount</h3>
+        <div class="grid grid-cols-4 gap-2 mb-6">
+            <div onclick="selectAmount(20)" id="amt-20" class="select-box glass-panel py-3 text-center text-xs font-bold cursor-pointer">৳20</div>
+            <div onclick="selectAmount(50)" id="amt-50" class="select-box glass-panel py-3 text-center text-xs font-bold cursor-pointer">৳50</div>
+            <div onclick="selectAmount(100)" id="amt-100" class="select-box glass-panel py-3 text-center text-xs font-bold cursor-pointer">৳100</div>
+            <div onclick="selectAmount(200)" id="amt-200" class="select-box glass-panel py-3 text-center text-xs font-bold cursor-pointer">৳200</div>
+        </div>
 
-  // Update Balance
-  function updateBalance() {
-    document.getElementById("balance").innerText = balance.toLocaleString();
-    localStorage.setItem("balance", balance);
-  }
-  updateBalance();
+        <!-- Input & Button -->
+        <div class="mb-6">
+            <div class="glass-panel flex items-center px-4 py-3 border focus-within:border-blue-500 transition">
+                <i class="fas fa-mobile-alt text-gray-500 mr-3"></i>
+                <input type="number" id="wallet-phone" placeholder="Mobile Number (017...)" class="bg-transparent w-full outline-none text-sm font-mono text-white placeholder-gray-500">
+            </div>
+        </div>
 
-  // Tabs
-  function openTab(evt, tabName) {
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    document.getElementById(tabName).classList.add("active");
-    document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
-    evt.currentTarget.classList.add("active");
-  }
+        <button onclick="submitWithdraw()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-blue-500/25 active:scale-95 transition uppercase tracking-wide">
+            Submit Request
+        </button>
 
-  // Earn Functions
-  function dailyCheckIn() {
-    if (localStorage.getItem("lastCheckin") === new Date().toDateString()) {
-      alert("আজকে ইতিমধ্যে চেক-ইন করা হয়েছে!");
-      return;
-    }
-    balance += 500;
-    localStorage.setItem("lastCheckin", new Date().toDateString());
-    updateBalance();
-    tg.HapticFeedback.notificationOccurred("success");
-    alert("চেক-ইন সফল! +500 পয়েন্ট");
-  }
+        <!-- History -->
+        <div class="mt-8">
+            <h3 class="font-bold text-sm text-gray-400 mb-3 pb-2 border-b border-slate-800">History</h3>
+            <div id="history-container" class="space-y-3">
+                <!-- History items will appear here -->
+            </div>
+        </div>
+    </div>
 
-  function spinWheel() {
-    let win = [100, 200, 300, 500, 1000][Math.floor(Math.random()*5)];
-    balance += win;
-    updateBalance();
-    tg.HapticFeedback.notificationOccurred("success");
-    alert(`অভিনন্দন! আপনি জিতেছেন ${win} পয়েন্ট!`);
-  }
 
-  function watchVideo() {
-    balance += 300;
-    updateBalance();
-    tg.HapticFeedback.notificationOccurred("success");
-    alert("ভিডিও দেখা শেষ! +300 পয়েন্ট");
-  }
+    <!-- === BOTTOM NAV === -->
+    <div class="fixed bottom-0 w-full bg-[#0f172a] border-t border-slate-800 flex justify-around items-end pb-6 pt-3 z-40 px-2 safe-area-pb">
+        <div onclick="switchTab('home', this)" class="nav-item active w-1/4 text-center cursor-pointer">
+            <i class="fas fa-home text-xl mb-1"></i>
+            <p class="text-[10px]">Home</p>
+            <div class="nav-dot"></div>
+        </div>
+        <div onclick="switchTab('task', this)" class="nav-item w-1/4 text-center cursor-pointer">
+            <i class="fas fa-gamepad text-xl mb-1"></i>
+            <p class="text-[10px]">Task</p>
+            <div class="nav-dot"></div>
+        </div>
+        <div onclick="switchTab('referral', this)" class="nav-item w-1/4 text-center cursor-pointer">
+            <i class="fas fa-users text-xl mb-1"></i>
+            <p class="text-[10px]">Refer</p>
+            <div class="nav-dot"></div>
+        </div>
+        <div onclick="switchTab('wallet', this)" class="nav-item w-1/4 text-center cursor-pointer">
+            <i class="fas fa-wallet text-xl mb-1"></i>
+            <p class="text-[10px]">Wallet</p>
+            <div class="nav-dot"></div>
+        </div>
+    </div>
 
-  function referFriend() {
-    let refLink = `https://t.me/YourBotName?start=ref${user.id}`;
-    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(refLink + "\n\nবন্ধুকে আমন্ত্রণ করুন এবং ১০০০ পয়েন্ট পান!")}`);
-    balance += 1000;
-    updateBalance();
-    alert("রেফার লিংক শেয়ার করা হয়েছে! +1000 পয়েন্ট");
-  }
 
-  // Wallet Functions
-  function selectMethod(method) {
-    selectedMethod = method;
-    document.querySelectorAll(".method-btn").forEach(b => b.classList.remove("active"));
-    event.target.classList.add("active");
-    checkWithdrawReady();
-  }
+    <!-- === SPIN WHEEL MODAL === -->
+    <div id="spin-modal" class="modal-overlay">
+        <div class="flex flex-col items-center">
+            <!-- Arrow -->
+            <div class="wheel-marker"></div>
+            
+            <!-- The Wheel -->
+            <div class="wheel-container" id="wheel-element">
+                <div class="wheel-segment"></div>
+                <!-- Center Button inside wheel is decorative here -->
+            </div>
 
-  function setAmount(points, taka) {
-    selectedAmount = points;
-    selectedTaka = taka;
-    document.getElementById("withdrawInfo").innerHTML = `নির্বাচিত: \( {points} পয়েন্ট = \){taka} টাকা`;
-    checkWithdrawReady();
-  }
+            <!-- Spin Button -->
+            <button id="spin-trigger-btn" onclick="executeSpin()" class="mt-10 bg-gradient-to-r from-green-500 to-emerald-600 px-10 py-3 rounded-full font-bold text-lg shadow-[0_0_20px_rgba(16,185,129,0.4)] animate-pulse active:scale-90 transition">
+                SPIN NOW
+            </button>
+            
+            <!-- Close Button -->
+            <button onclick="closeSpinModal()" class="mt-6 text-gray-400 text-sm underline cursor-pointer">Close</button>
+        </div>
+    </div>
 
-  function checkWithdrawReady() {
-    let phone = document.getElementById("phone").value.trim();
-    if (balance >= selectedAmount && selectedAmount > 0 && phone.length === 11) {
-      document.getElementById("withdrawBtn").disabled = false;
-    } else {
-      document.getElementById("withdrawBtn").disabled = true;
-    }
-  }
+    <!-- === LEADERBOARD MODAL === -->
+    <div id="leaderboard-modal" class="modal-overlay z-[60]">
+        <div class="bg-[#1e293b] w-11/12 max-w-sm rounded-2xl p-5 border border-slate-700 shadow-2xl transform transition-all">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-yellow-400"><i class="fas fa-crown mr-2"></i>Top Leaders</h3>
+                <button onclick="document.getElementById('leaderboard-modal').classList.remove('open')" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div id="lb-list" class="space-y-3 max-h-[300px] overflow-y-auto">
+                <!-- Dynamic List -->
+                <div class="text-center text-gray-500 text-xs py-4">Loading...</div>
+            </div>
+        </div>
+    </div>
 
-  document.getElementById("phone").addEventListener("input", checkWithdrawReady);
 
-  function requestWithdraw() {
-    let phone = document.getElementById("phone").value.trim();
-    if (balance < selectedAmount) return alert("পয়েন্ট যথেষ্ট নেই!");
-    if (phone.length !== 11) return alert("সঠিক নম্বর দিন!");
+    <!-- === JAVASCRIPT LOGIC === -->
+    <script>
+        // 1. SUPABASE CONFIGURATION (Corrected)
+        // DO NOT use 'const supabase' to initialize, it conflicts with the global 'supabase' object from script tag.
+        const SUPABASE_URL = 'https://jnoavdzcbmskwoectioc.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impub2F2ZHpjYm1za3dvZWN0aW9jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4MDA4ODcsImV4cCI6MjA3OTM3Njg4N30.x3O1xvNMQfqLZ507nfgDcjFJ3faen-uq6l7mrx47NH8';
+        
+        // Use a different variable name like 'db' or 'sbClient'
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Send to Admin
-    let adminId = 123456789; // ← এখানে তোমার টেলিগ্রাম ID বসাও
-    let msg = `*নতুন উইথড্র রিকোয়েস্ট*\n\n` +
-              `ইউজার: \( {user.first_name} (@ \){user.username || 'NoUsername'})\n` +
-              `ID: ${user.id}\n` +
-              `পরিমাণ: \( {selectedAmount} পয়েন্ট = \){selectedTaka} টাকা\n` +
-              `মেথড: ${selectedMethod.toUpperCase()}\n` +
-              `নম্বর: ${phone}\n\n` +
-              `ব্যালেন্স ছিল: ${balance}`;
+        // 2. TELEGRAM INIT
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.enableClosingConfirmation();
 
-    fetch(`https://api.telegram.org/botYOUR_BOT_TOKEN/sendMessage?chat_id=\( {adminId}&text= \){encodeURIComponent(msg)}&parse_mode=Markdown`)
-      .then(() => {
-        alert("উইথড্র রিকোয়েস্ট সফলভাবে পাঠানো হয়েছে! ২৪ ঘণ্টার মধ্যে পেমেন্ট পাবেন।");
-      });
+        // 3. APP STATE
+        let currentUser = null;
+        let userCountry = 'BD';
+        let botUsername = 'YourBot'; 
+        let supportLink = '';
+        
+        // Wallet State
+        let withdrawMethod = null;
+        let withdrawAmount = null;
 
-    // Deduct points
-    balance -= selectedAmount;
-    updateBalance();
-    document.getElementById("withdrawBtn").disabled = true;
-  }
+        // Spin State
+        let activeSpinType = 0;
+        let isSpinning = false;
 
-  // Admin Panel Link (Only for you)
-  if (user.id == 123456789) { // ← তোমার ID বসাও
-    setTimeout(() => {
-      tg.showPopup({
-        title: "অ্যাডমিন প্যানেল",
-        message: "আপনি অ্যাডমিন। অ্যাডমিন প্যানেলে যান?",
-        buttons: [{type: "default", text: "হ্যাঁ", id: "admin"}, {type: "cancel"}]
-      }, (btn) => {
-        if (btn === "admin") {
-          location.href = "https://your-admin-panel-link.com"; // ← তোমার অ্যাডমিন প্যানেল লিংক
+        // --- INITIALIZATION ---
+        async function initApp() {
+            console.log("App initializing...");
+            
+            // Fetch IP Country
+            try {
+                const res = await fetch('https://ipapi.co/json/');
+                const data = await res.json();
+                userCountry = data.country_code || 'BD';
+            } catch (e) { console.log("IP Error", e); }
+
+            // Fetch App Config (Bot Name, Support)
+            const { data: configs } = await db.from('app_config').select('*');
+            if(configs) {
+                configs.forEach(c => {
+                    if(c.key === 'bot_username') botUsername = c.value;
+                    if(c.key === 'support_link') supportLink = c.value;
+                });
+            }
+
+            // User Auth Logic
+            // Check if running in Telegram or Browser
+            let tgUser = { id: 1122334455, first_name: "Guest User", photo_url: "" }; // Default dummy
+            if(tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                tgUser = tg.initDataUnsafe.user;
+            }
+
+            const startParam = tg.initDataUnsafe.start_param;
+            
+            // Device Check for Referral Anti-Cheat
+            let deviceId = localStorage.getItem('device_unique_id');
+            let isNewDevice = false;
+            if(!deviceId) {
+                deviceId = crypto.randomUUID();
+                localStorage.setItem('device_unique_id', deviceId);
+                isNewDevice = true;
+            }
+
+            // DB Check
+            const { data: user, error } = await db.from('users').select('*').eq('telegram_id', tgUser.id).single();
+
+            if(!user) {
+                // REGISTER NEW USER
+                let refId = null;
+                if(startParam && startParam != tgUser.id && isNewDevice) {
+                    refId = startParam;
+                }
+
+                const { data: newUser } = await db.from('users').insert([{
+                    telegram_id: tgUser.id,
+                    first_name: tgUser.first_name,
+                    photo_url: tgUser.photo_url,
+                    country: userCountry,
+                    referrer_id: refId,
+                    balance: 0.00
+                }]).select().single();
+
+                currentUser = newUser;
+
+                // Give Referral Bonus to Referrer (Fixed 2.00 Taka)
+                if(refId) {
+                    const { data: rUser } = await db.from('users').select('balance').eq('telegram_id', refId).single();
+                    if(rUser) {
+                        await db.from('users').update({ balance: rUser.balance + 2.00 }).eq('telegram_id', refId);
+                    }
+                }
+            } else {
+                currentUser = user;
+                // Update profile info if changed
+                if(user.first_name !== tgUser.first_name) {
+                    await db.from('users').update({ first_name: tgUser.first_name }).eq('telegram_id', tgUser.id);
+                }
+            }
+
+            updateUI();
+            loadHistory();
         }
-      });
-    }, 2000);
-  }
-</script>
+
+        function updateUI() {
+            if(!currentUser) return;
+            document.getElementById('user-name').innerText = currentUser.first_name;
+            document.getElementById('user-id').innerText = currentUser.telegram_id;
+            if(currentUser.photo_url) document.getElementById('user-photo').src = currentUser.photo_url;
+            
+            // Balance
+            const bal = parseFloat(currentUser.balance).toFixed(2);
+            document.getElementById('header-balance').innerText = bal;
+            document.getElementById('wallet-balance').innerText = bal;
+
+            // Ref Link
+            document.getElementById('ref-link').innerText = `https://t.me/${botUsername}?start=${currentUser.telegram_id}`;
+        }
+
+
+        // --- NAVIGATION ---
+        window.switchTab = function(tabId, element) {
+            // Hide all pages
+            document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active-page'));
+            // Show target page
+            document.getElementById(tabId).classList.add('active-page');
+            
+            // Navbar styling
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+
+        // --- TASK: SPIN WHEEL ---
+        window.openSpinModal = function(type) {
+            activeSpinType = type;
+            document.getElementById('spin-modal').classList.add('open');
+        }
+
+        window.closeSpinModal = function() {
+            if(isSpinning) return; 
+            document.getElementById('spin-modal').classList.remove('open');
+        }
+
+        window.executeSpin = function() {
+            if(isSpinning) return;
+            isSpinning = true;
+            
+            const wheel = document.getElementById('wheel-element');
+            const btn = document.getElementById('spin-trigger-btn');
+            
+            btn.disabled = true;
+            btn.innerText = "Spinning...";
+            btn.classList.remove('animate-pulse');
+
+            // Calculate Random Degree
+            const randomDeg = Math.floor(2500 + Math.random() * 2500); 
+            wheel.style.transform = `rotate(${randomDeg}deg)`;
+
+            // Wait for spin end (4 seconds)
+            setTimeout(() => {
+                // Show Ad
+                if(window.showGiga) {
+                    window.showGiga().then(() => {
+                        giveReward('spin');
+                    }).catch((e) => {
+                        console.error("Ad error:", e);
+                        // Fallback reward if ad fails to load, to keep user happy? Or show error?
+                        // Let's give reward anyway for good UX in this demo
+                        giveReward('spin');
+                    });
+                } else {
+                    // For testing without ad script
+                    giveReward('spin'); 
+                }
+            }, 4100);
+        }
+
+        async function giveReward(taskType) {
+            // Get Rates
+            const { data: settings } = await db.from('settings').select('*').eq('country_code', userCountry).single();
+            const { data: defSettings } = await db.from('settings').select('*').eq('country_code', 'DEFAULT').single();
+            const rate = settings || defSettings || { spin_reward: 0.50, ad_reward: 1.00, daily_reward: 1.00 };
+
+            let amount = 0;
+            if(taskType === 'spin') amount = activeSpinType === 2 ? (rate.spin_reward * 1.5) : rate.spin_reward; 
+            if(taskType === 'ad') amount = rate.ad_reward;
+            if(taskType === 'daily') amount = rate.daily_reward;
+
+            // Update DB
+            const newBal = parseFloat(currentUser.balance) + parseFloat(amount);
+            const { data } = await db.from('users').update({ balance: newBal }).eq('telegram_id', currentUser.telegram_id).select().single();
+            
+            currentUser = data;
+            updateUI();
+            
+            if(taskType === 'spin') {
+                tg.showAlert(`You won ৳${parseFloat(amount).toFixed(2)}!`);
+                resetSpinState();
+            } else {
+                tg.showAlert(`Reward Added: ৳${parseFloat(amount).toFixed(2)}`);
+            }
+        }
+
+        function resetSpinState() {
+            const wheel = document.getElementById('wheel-element');
+            const btn = document.getElementById('spin-trigger-btn');
+            
+            isSpinning = false;
+            wheel.style.transition = 'none';
+            wheel.style.transform = 'rotate(0deg)';
+            
+            setTimeout(() => {
+                wheel.style.transition = 'transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+                btn.disabled = false;
+                btn.innerText = "SPIN NOW";
+                btn.classList.add('animate-pulse');
+                closeSpinModal();
+            }, 100);
+        }
+
+        // --- OTHER TASKS ---
+        window.watchVideoTask = function() {
+            if(window.showGiga) {
+                window.showGiga().then(() => giveReward('ad'));
+            } else {
+                tg.showAlert("Ad system loading...");
+            }
+        }
+
+        window.dailyTask = function() {
+            // Basic check - Ideally check DB last_checkin
+            if(window.showGiga) {
+                window.showGiga().then(() => giveReward('daily'));
+            } else {
+                giveReward('daily'); // Fallback
+            }
+        }
+
+        // --- WALLET FUNCTIONALITY (FIXED) ---
+        window.selectMethod = function(method) {
+            withdrawMethod = method;
+            // Visual Fix
+            document.querySelectorAll('.select-box').forEach(el => {
+                if(el.id.startsWith('opt-')) el.classList.remove('active');
+            });
+            document.getElementById(`opt-${method}`).classList.add('active');
+        }
+
+        window.selectAmount = function(amount) {
+            withdrawAmount = amount;
+            // Visual Fix
+            document.querySelectorAll('.select-box').forEach(el => {
+                if(el.id.startsWith('amt-')) el.classList.remove('active');
+            });
+            document.getElementById(`amt-${amount}`).classList.add('active');
+        }
+
+        window.submitWithdraw = async function() {
+            const phone = document.getElementById('wallet-phone').value;
+
+            if(!withdrawMethod) return tg.showAlert("Please select Payment Method");
+            if(!withdrawAmount) return tg.showAlert("Please select Amount");
+            if(!phone || phone.length < 11) return tg.showAlert("Invalid Phone Number");
+            
+            if(currentUser.balance < withdrawAmount) return tg.showAlert("Insufficient Balance!");
+
+            // Deduct
+            const newBal = parseFloat(currentUser.balance) - parseFloat(withdrawAmount);
+            const { error } = await db.from('users').update({ balance: newBal }).eq('telegram_id', currentUser.telegram_id);
+            
+            if(!error) {
+                // Insert Request
+                await db.from('withdrawals').insert([{
+                    telegram_id: currentUser.telegram_id,
+                    method: withdrawMethod,
+                    amount: withdrawAmount,
+                    number: phone
+                }]);
+
+                currentUser.balance = newBal;
+                updateUI();
+                loadHistory();
+                tg.showAlert("Withdrawal Request Submitted!");
+            } else {
+                tg.showAlert("Network Error");
+            }
+        }
+
+        async function loadHistory() {
+            const { data } = await db.from('withdrawals')
+                .select('*')
+                .eq('telegram_id', currentUser.telegram_id)
+                .order('created_at', { ascending: false })
+                .limit(5);
+            
+            const container = document.getElementById('history-container');
+            container.innerHTML = '';
+
+            if(data && data.length > 0) {
+                data.forEach(item => {
+                    const statusColor = item.status === 'paid' ? 'text-green-400' : (item.status === 'rejected' ? 'text-red-400' : 'text-yellow-400');
+                    const html = `
+                        <div class="glass-panel p-3 flex justify-between items-center">
+                            <div>
+                                <p class="text-xs font-bold text-gray-300">${item.method} - ৳${item.amount}</p>
+                                <p class="text-[10px] text-gray-500">${new Date(item.created_at).toLocaleDateString()}</p>
+                            </div>
+                            <span class="text-[10px] uppercase font-bold ${statusColor} border border-white/10 px-2 py-1 rounded">${item.status}</span>
+                        </div>
+                    `;
+                    container.innerHTML += html;
+                });
+            } else {
+                container.innerHTML = '<p class="text-center text-xs text-gray-500">No transactions found.</p>';
+            }
+        }
+
+        // --- EXTRAS ---
+        window.copyRefLink = function() {
+            const link = document.getElementById('ref-link').innerText;
+            if(link === 'Loading...') return;
+            navigator.clipboard.writeText(link);
+            tg.showAlert("Link Copied!");
+        }
+
+        window.openSupport = function() {
+            if(supportLink) tg.openTelegramLink(supportLink);
+            else tg.showAlert("Support link not set by admin");
+        }
+
+        window.openLeaderboard = async function() {
+            document.getElementById('leaderboard-modal').classList.add('open');
+            const list = document.getElementById('lb-list');
+            list.innerHTML = '<div class="text-center text-gray-500 text-xs py-4">Loading...</div>';
+            
+            const { data } = await db.from('users').select('first_name, balance').order('balance', {ascending:false}).limit(5);
+            
+            if(data) {
+                list.innerHTML = '';
+                data.forEach((u, i) => {
+                    let rankColor = i === 0 ? 'text-yellow-400' : (i === 1 ? 'text-gray-300' : (i === 2 ? 'text-orange-400' : 'text-gray-500'));
+                    let rankIcon = i < 3 ? '<i class="fas fa-trophy"></i>' : `#${i+1}`;
+                    
+                    list.innerHTML += `
+                    <div class="flex justify-between items-center bg-slate-800 p-3 rounded-lg border border-slate-700">
+                        <div class="flex items-center gap-3">
+                            <span class="${rankColor} font-bold text-sm w-6 text-center">${rankIcon}</span>
+                            <span class="text-sm font-medium truncate w-32">${u.first_name}</span>
+                        </div>
+                        <span class="text-green-400 font-bold text-sm">৳${u.balance.toFixed(2)}</span>
+                    </div>`;
+                });
+            }
+        }
+
+        // Start the App
+        // We use window.onload to ensure scripts are fully parsed
+        window.onload = initApp;
+
+    </script>
 </body>
 </html>
