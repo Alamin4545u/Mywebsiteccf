@@ -10,8 +10,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
-    <!-- OneClick (Onclicka) Script -->
-    <script src="https://js.onclckvd.com/in-stream-ad-admanager/tma.js"></script>
+    <!-- Monetag Script (Updated) -->
+    <script src='//libtl.com/sdk.js' data-zone='10197154' data-sdk='show_10197154'></script>
     
     <!-- Styles -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -99,7 +99,7 @@
         <div onclick="dailyCheckin()" class="glass-panel p-5 mb-5 flex justify-between items-center cursor-pointer active:scale-95 transition-transform relative overflow-hidden group">
             <div class="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition"></div>
             <div>
-                <h2 class="text-lg font-bold text-white">Daily Check-in</h2>
+                <h2 class="text-lg font-bold text-white">Ddly Check-in</h2>
                 <p class="text-xs text-gray-400 mt-1">Reward: <span class="text-yellow-400 font-bold">৳<span id="daily-text">0</span></span></p>
             </div>
             <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/30">
@@ -246,10 +246,6 @@
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         const tg = window.Telegram.WebApp;
 
-        // --- ONCLICKA AD CONFIG ---
-        const ONCLICKA_SPOT_ID = '6099062'; 
-        let showOnclickaAd = null; 
-
         // Initialize
         tg.expand();
         tg.enableClosingConfirmation();
@@ -268,18 +264,11 @@
         async function initApp() {
             console.log("App Initializing...");
             
-            // Onclicka Ad Initialize
-            if (window.initCdTma) {
-                try {
-                    console.log("Initializing Ads with Spot ID:", ONCLICKA_SPOT_ID);
-                    const show = await window.initCdTma({ id: ONCLICKA_SPOT_ID });
-                    showOnclickaAd = show;
-                    console.log("Ad Engine Ready!");
-                } catch (e) {
-                    console.error("Ad Engine Init Failed:", e);
-                }
+            // Monetag Auto-Initialization Check
+            if (typeof window.show_10197154 === 'function') {
+                console.log("Monetag Ad Engine Ready!");
             } else {
-                console.warn("Onclicka script not loaded yet.");
+                console.warn("Monetag script loading...");
             }
 
             // A. Fetch Config
@@ -416,7 +405,7 @@
             });
         }
 
-        // *** AD LOGIC ***
+        // *** MONETAG AD LOGIC ***
         window.startTask = async (type, reward) => {
             tg.MainButton.showProgress();
             const vpnOk = await checkVPN();
@@ -427,34 +416,28 @@
                 spinRewardTemp = reward;
                 document.getElementById('spin-modal').classList.add('open');
             } else {
-                if(!showOnclickaAd) {
-                    if(window.initCdTma) {
-                         try {
-                            const show = await window.initCdTma({ id: ONCLICKA_SPOT_ID });
-                            showOnclickaAd = show;
-                         } catch(e) {
-                             console.log(e);
-                             tg.showAlert("Ad system is initializing, try again in 5 seconds.");
-                             return;
-                         }
-                    } else {
-                        tg.showAlert("Ad script not loaded. Check internet.");
-                        return;
-                    }
-                }
+                // Check if Monetag function exists (name comes from data-sdk attribute)
+                if (typeof window.show_10197154 === 'function') {
+                    
+                    document.getElementById('ad-loader').classList.add('open'); // Show Loader
+                    
+                    // Call the Monetag Show function
+                    window.show_10197154()
+                        .then(() => {
+                            // Ad Success
+                            document.getElementById('ad-loader').classList.remove('open');
+                            giveReward(reward);
+                        })
+                        .catch((e) => {
+                            // Ad Closed/Failed
+                            document.getElementById('ad-loader').classList.remove('open');
+                            console.error("Ad Failed or Closed:", e);
+                            tg.showAlert("Ad failed to load or was closed early.");
+                        });
 
-                document.getElementById('ad-loader').classList.add('open'); 
-                
-                showOnclickaAd()
-                    .then(() => {
-                        document.getElementById('ad-loader').classList.remove('open');
-                        giveReward(reward);
-                    })
-                    .catch((err) => {
-                        document.getElementById('ad-loader').classList.remove('open');
-                        console.error("Ad Failed:", err);
-                        tg.showAlert("Ad failed or you closed it too early!");
-                    });
+                } else {
+                    tg.showAlert("Ad is loading... Please wait a few seconds and try again.");
+                }
             }
         }
 
@@ -570,7 +553,7 @@
             document.getElementById(`amt-${a}`).classList.add('active');
         }
 
-        // *** UPDATED WITHDRAW LOGIC (REFERRAL CHECK) ***
+        // *** WITHDRAW LOGIC (REFERRAL CHECK) ***
         window.withdraw = async () => {
             const num = document.getElementById('wallet-phone').value;
             
