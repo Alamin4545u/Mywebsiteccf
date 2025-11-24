@@ -10,36 +10,26 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
-    <!-- Monetag Script (Updated) -->
+    <!-- MONETAG ADS SCRIPT -->
+    <!-- আপনার দেওয়া ডাটা জোন আইডি অনুযায়ী -->
     <script src='//libtl.com/sdk.js' data-zone='10197154' data-sdk='show_10197154'></script>
-    
+
     <!-- Styles -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
         body { background-color: #0f172a; color: white; font-family: 'Poppins', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
-        
-        /* Glassmorphism */
         .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); }
-        
-        /* Animations */
         .page-section { display: none; padding-bottom: 90px; animation: fadeIn 0.3s ease-in-out; }
         .page-section.active-page { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
         .nav-item { transition: 0.3s; opacity: 0.6; }
         .nav-item.active { opacity: 1; color: #3b82f6; transform: translateY(-5px); }
-
-        /* Modal */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 50; display: none; align-items: center; justify-content: center; }
         .modal-overlay.open { display: flex; }
-        
-        /* Select Box */
         .select-box { border: 2px solid transparent; transition: 0.2s; }
         .select-box.active { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
-        
-        /* Loader */
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -89,17 +79,15 @@
 
     <!-- 1. HOME -->
     <div id="home" class="page-section active-page px-4">
-        <!-- Notice -->
         <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg p-2 mb-5 flex items-center gap-3">
             <i class="fas fa-bullhorn text-amber-500 animate-pulse"></i>
             <marquee id="home-notice" class="text-xs text-amber-100 font-medium">Loading notice...</marquee>
         </div>
 
-        <!-- Daily Bonus -->
         <div onclick="dailyCheckin()" class="glass-panel p-5 mb-5 flex justify-between items-center cursor-pointer active:scale-95 transition-transform relative overflow-hidden group">
             <div class="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition"></div>
             <div>
-                <h2 class="text-lg font-bold text-white">Ddly Check-in</h2>
+                <h2 class="text-lg font-bold text-white">Daily Check-in</h2>
                 <p class="text-xs text-gray-400 mt-1">Reward: <span class="text-yellow-400 font-bold">৳<span id="daily-text">0</span></span></p>
             </div>
             <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/30">
@@ -107,7 +95,6 @@
             </div>
         </div>
 
-        <!-- Support Buttons -->
         <div class="grid grid-cols-2 gap-4">
             <div onclick="openSupport()" class="glass-panel p-4 flex flex-col items-center justify-center gap-2 cursor-pointer active:bg-slate-800">
                 <i class="fab fa-telegram text-3xl text-sky-500"></i>
@@ -168,18 +155,13 @@
             <h1 class="text-4xl font-bold mt-2 text-green-400 drop-shadow-lg">৳ <span id="wallet-balance">0.00</span></h1>
         </div>
         
-        <!-- RULE NOTICE -->
         <div class="bg-red-500/10 border border-red-500/20 p-2 rounded text-center mb-4">
             <p class="text-xs text-red-300"><i class="fas fa-info-circle mr-1"></i> Minimum 3 Referrals required to withdraw.</p>
         </div>
 
-        <!-- Payment Method -->
         <h3 class="font-bold text-xs text-gray-400 mb-2 uppercase ml-1">Select Method</h3>
-        <div id="method-container" class="grid grid-cols-3 gap-3 mb-6">
-            <!-- JS will inject methods here -->
-        </div>
+        <div id="method-container" class="grid grid-cols-3 gap-3 mb-6"></div>
 
-        <!-- Amount -->
         <h3 class="font-bold text-xs text-gray-400 mb-2 uppercase ml-1">Select Amount</h3>
         <div class="grid grid-cols-4 gap-2 mb-6">
             <div onclick="setAmount(20)" id="amt-20" class="select-box glass-panel py-3 text-center text-xs font-bold cursor-pointer">20</div>
@@ -246,6 +228,9 @@
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         const tg = window.Telegram.WebApp;
 
+        // --- MONETAG CONFIG ---
+        const AD_SDK_NAME = 'show_10197154'; // আপনার SDK ফাংশনের নাম
+
         // Initialize
         tg.expand();
         tg.enableClosingConfirmation();
@@ -257,16 +242,25 @@
         let wAmount = null;
         let spinRewardTemp = 0;
 
-        // ==========================================
-        // CORE APP LOGIC
-        // ==========================================
-
         async function initApp() {
             console.log("App Initializing...");
             
-            // Monetag Auto-Initialization Check
-            if (typeof window.show_10197154 === 'function') {
-                console.log("Monetag Ad Engine Ready!");
+            // 1. Initialize In-App Interstitial (এটি অটোমেটিক কাজ করবে)
+            // আপনার দেওয়া ৩ নাম্বার কোডটি এখানে বসানো হলো
+            if (typeof window[AD_SDK_NAME] === 'function') {
+                try {
+                    console.log("Configuring In-App Ads...");
+                    window[AD_SDK_NAME]({
+                        type: 'inApp',
+                        inAppSettings: {
+                            frequency: 2,
+                            capping: 0.1,
+                            interval: 30,
+                            timeout: 5,
+                            everyPage: false
+                        }
+                    });
+                } catch(e) { console.error("In-App Config Error:", e); }
             } else {
                 console.warn("Monetag script loading...");
             }
@@ -359,10 +353,6 @@
             document.getElementById('ref-link').innerText = `https://t.me/${botUser}?start=${user.telegram_id}`;
         }
 
-        // ==========================================
-        // VPN & TASK SYSTEM
-        // ==========================================
-
         async function checkVPN() {
             if(config.vpn_required !== 'true') return true;
             try {
@@ -381,11 +371,15 @@
         }
 
         async function loadTasks() {
+            // Task লোড করার সময় আমরা ad_format কলামও চেক করব
             const { data: tasks } = await db.from('tasks').select('*').eq('is_active', true).order('reward');
             const c = document.getElementById('task-container');
             c.innerHTML = '';
             
             if(tasks) tasks.forEach(t => {
+                // ad_format ডাটাবেসে না থাকলে ডিফল্ট 'rewarded' ধরে নেব
+                const adFormat = t.ad_format || 'rewarded'; 
+                
                 c.innerHTML += `
                 <div class="glass-panel p-4 flex justify-between items-center">
                     <div class="flex gap-3 items-center">
@@ -394,10 +388,11 @@
                         </div>
                         <div>
                             <h3 class="font-bold text-sm">${t.title}</h3>
-                            <p class="text-[10px] text-gray-400">Limit: ${t.daily_limit || 1}/day</p>
+                            <p class="text-[10px] text-gray-400">Type: ${adFormat.toUpperCase()}</p>
                         </div>
                     </div>
-                    <button onclick="startTask('${t.type}', ${t.reward})" 
+                    <!-- এখানে আমরা startTask ফাংশনে adFormat পাঠিয়ে দিচ্ছি -->
+                    <button onclick="startTask('${t.type}', ${t.reward}, '${adFormat}')" 
                         class="bg-blue-600 px-4 py-1.5 rounded text-xs font-bold shadow hover:bg-blue-700 active:scale-95 transition">
                         +৳${t.reward}
                     </button>
@@ -405,8 +400,11 @@
             });
         }
 
-        // *** MONETAG AD LOGIC ***
-        window.startTask = async (type, reward) => {
+        // ==========================================
+        // DYNAMIC AD LOGIC IMPLEMENTATION
+        // ==========================================
+
+        window.startTask = async (type, reward, adFormat = 'rewarded') => {
             tg.MainButton.showProgress();
             const vpnOk = await checkVPN();
             tg.MainButton.hideProgress();
@@ -416,27 +414,38 @@
                 spinRewardTemp = reward;
                 document.getElementById('spin-modal').classList.add('open');
             } else {
-                // Check if Monetag function exists (name comes from data-sdk attribute)
-                if (typeof window.show_10197154 === 'function') {
+                // Check if Ad SDK exists
+                if (typeof window[AD_SDK_NAME] === 'function') {
                     
-                    document.getElementById('ad-loader').classList.add('open'); // Show Loader
+                    document.getElementById('ad-loader').classList.add('open'); 
                     
-                    // Call the Monetag Show function
-                    window.show_10197154()
+                    // --- SELECT AD TYPE BASED ON DATABASE CONFIG ---
+                    let adPromise;
+                    
+                    if (adFormat === 'popup') {
+                        // 2. Rewarded Popup
+                        console.log("Showing Popup Ad...");
+                        adPromise = window[AD_SDK_NAME]('pop');
+                    } else {
+                        // 1. Standard Rewarded (Default)
+                        console.log("Showing Standard Rewarded Ad...");
+                        adPromise = window[AD_SDK_NAME]();
+                    }
+                    
+                    // Handle Ad Result
+                    adPromise
                         .then(() => {
-                            // Ad Success
                             document.getElementById('ad-loader').classList.remove('open');
                             giveReward(reward);
                         })
                         .catch((e) => {
-                            // Ad Closed/Failed
                             document.getElementById('ad-loader').classList.remove('open');
-                            console.error("Ad Failed or Closed:", e);
+                            console.error("Ad Failed:", e);
                             tg.showAlert("Ad failed to load or was closed early.");
                         });
-
+                        
                 } else {
-                    tg.showAlert("Ad is loading... Please wait a few seconds and try again.");
+                    tg.showAlert("Ad is loading... Please wait a few seconds.");
                 }
             }
         }
@@ -464,10 +473,7 @@
             }
         }
 
-        // ==========================================
         // EXTRAS
-        // ==========================================
-
         window.executeSpin = () => {
             document.getElementById('spin-btn').disabled = true;
             setTimeout(() => {
@@ -519,10 +525,7 @@
             document.getElementById('lb-list').innerHTML = data.map((u,i)=>`<div class="flex justify-between bg-slate-800 p-2 rounded text-xs"><span>#${i+1} ${u.first_name}</span><span class="text-green-400">৳${u.balance.toFixed(2)}</span></div>`).join('');
         }
 
-        // ==========================================
         // WALLET SYSTEM
-        // ==========================================
-
         async function loadWallet() {
             const { data: methods } = await db.from('payment_methods').select('*').eq('is_active', true);
             const c = document.getElementById('method-container');
@@ -553,18 +556,14 @@
             document.getElementById(`amt-${a}`).classList.add('active');
         }
 
-        // *** WITHDRAW LOGIC (REFERRAL CHECK) ***
         window.withdraw = async () => {
             const num = document.getElementById('wallet-phone').value;
             
-            // Basic Checks
             if(!wMethod || !wAmount || !num) return tg.showAlert("Fill all fields!");
             if(user.balance < wAmount) return tg.showAlert("Insufficient balance!");
 
-            // *** CHECK REFERRAL COUNT ***
             tg.MainButton.showProgress();
             
-            // Count users who have this user as referrer
             const { count, error } = await db
                 .from('users')
                 .select('*', { count: 'exact', head: true })
@@ -577,17 +576,14 @@
                 return tg.showAlert("Error checking referrals. Try again.");
             }
 
-            // Minimum 3 Referrals Check
             if (count < 3) {
                 return tg.showAlert(`Withdraw Failed!\nYou need at least 3 referrals to withdraw.\nCurrent Referrals: ${count}/3`);
             }
 
-            // Deduct
             const newBal = user.balance - wAmount;
             await db.from('users').update({ balance: newBal }).eq('telegram_id', user.telegram_id);
             user.balance = newBal;
             
-            // Insert Request
             await db.from('withdrawals').insert([{
                 telegram_id: user.telegram_id,
                 method: wMethod,
@@ -601,17 +597,16 @@
             tg.showAlert("Request Submitted!");
         }
 
-        // Navigation & Utils
         window.nav = (id, el) => { 
             document.querySelectorAll('.page-section').forEach(p=>p.classList.remove('active-page')); 
             document.getElementById(id).classList.add('active-page'); 
             document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); 
             el.classList.add('active'); 
         }
+        
         window.copyRef = () => { navigator.clipboard.writeText(document.getElementById('ref-link').innerText); tg.showAlert("Link Copied!"); }
         window.openSupport = () => tg.openTelegramLink(config.support_link);
 
-        // START APP
         initApp();
     </script>
 </body>
