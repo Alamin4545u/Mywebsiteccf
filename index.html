@@ -3,141 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Giga Earn</title>
+    <title>Giga Earn App</title>
     
     <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- GigaPub Ad Script (Replace ID if needed) -->
-    <script src="https://ad.gigapub.tech/script?id=4413"></script> 
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        body { background-color: #0f172a; color: white; font-family: 'Poppins', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
-        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; }
-        .page-section { display: none; padding-bottom: 100px; animation: fadeIn 0.3s; }
-        .active-page { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 50; display: none; align-items: center; justify-content: center; }
-        .modal-overlay.open { display: flex; }
-        .nav-item.active { color: #3b82f6; transform: translateY(-5px); }
+        body { background-color: #0f172a; color: white; font-family: sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
+        .glass { background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .page { display: none; padding-bottom: 80px; animation: fadeIn 0.3s; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .nav-btn.active { color: #3b82f6; transform: scale(1.1); }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 50; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
+    <!-- LOADING SCREEN -->
+    <div id="loading-screen" class="fixed inset-0 bg-[#0f172a] z-[100] flex flex-col items-center justify-center">
+        <div class="loader mb-4"></div>
+        <p class="text-blue-400 font-bold animate-pulse">Loading Giga Earn...</p>
+    </div>
+
     <!-- VPN ALERT MODAL -->
-    <div id="vpn-screen" class="modal-overlay z-[100]">
-        <div class="glass-panel p-6 mx-4 text-center max-w-xs w-full">
-            <i class="fas fa-shield-halved text-5xl text-red-500 mb-4 animate-pulse"></i>
-            <h1 class="text-xl font-bold text-red-400">VPN Required</h1>
-            <p class="text-gray-400 mt-2 text-xs">Access denied! Please connect VPN to:</p>
-            <div id="vpn-list" class="mt-3 bg-slate-800 p-2 rounded text-green-400 font-bold font-mono text-sm break-words">...</div>
-            <button onclick="location.reload()" class="mt-6 bg-slate-600 w-full py-2 rounded-lg font-bold">Reload App</button>
+    <div id="vpn-modal" class="modal">
+        <div class="glass p-6 text-center w-80 border-red-500/50 border">
+            <i class="fas fa-shield-halved text-5xl text-red-500 mb-4"></i>
+            <h2 class="text-xl font-bold mb-2 text-red-400">VPN Required</h2>
+            <p class="text-sm text-gray-300 mb-4">Please connect VPN to:</p>
+            <div id="vpn-countries" class="bg-gray-800 p-2 rounded text-green-400 font-mono font-bold text-sm mb-4">...</div>
+            <button onclick="window.location.reload()" class="bg-slate-700 hover:bg-slate-600 px-6 py-2 rounded-full w-full font-bold transition">Try Again</button>
         </div>
     </div>
 
     <!-- HEADER -->
-    <div class="fixed top-0 w-full z-40 bg-[#0f172a]/95 border-b border-slate-800 px-4 py-3 flex justify-between items-center shadow-lg">
+    <div class="fixed top-0 w-full bg-[#0f172a]/95 backdrop-blur p-4 flex justify-between items-center z-40 border-b border-gray-800 shadow-lg">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-slate-700 overflow-hidden"><img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="w-full"></div>
+            <div class="w-10 h-10 rounded-full bg-blue-600/20 flex items-center justify-center border border-blue-500/30">
+                <i class="fas fa-user text-blue-400"></i>
+            </div>
             <div>
-                <h3 id="u-name" class="font-bold text-sm">Guest</h3>
-                <span class="text-[10px] text-gray-400">ID: <span id="u-id">...</span></span>
+                <p id="u-name" class="font-bold text-sm text-white">Guest</p>
+                <p class="text-[10px] text-gray-400">ID: <span id="u-id">...</span></p>
             </div>
         </div>
-        <div class="glass-panel px-4 py-1.5 text-right">
-            <p class="text-[10px] text-gray-400">Balance</p>
-            <p class="font-bold text-lg text-green-400">৳<span id="u-bal">0.00</span></p>
+        <div class="glass px-4 py-1.5 text-right">
+            <p class="text-[10px] text-gray-400 uppercase tracking-wider">Balance</p>
+            <p class="font-bold text-lg text-green-400 leading-none">৳<span id="balance">0.00</span></p>
         </div>
     </div>
     <div class="h-20"></div>
 
-    <!-- HOME PAGE -->
-    <div id="home" class="page-section active-page px-4">
-        <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg p-2 mb-5 flex items-center gap-3">
-            <i class="fas fa-bullhorn text-amber-500"></i>
-            <marquee id="notice-text" class="text-xs text-amber-100">Loading...</marquee>
+    <!-- 1. HOME PAGE -->
+    <div id="p-home" class="page active px-4">
+        <!-- Notice -->
+        <div class="bg-amber-500/10 border border-amber-500/20 p-2 rounded-lg mb-5 flex items-center gap-2">
+            <i class="fas fa-bullhorn text-amber-500 animate-pulse"></i>
+            <marquee id="notice" class="text-xs text-amber-100 font-medium">Loading notice...</marquee>
         </div>
 
-        <div onclick="dailyCheckin()" class="glass-panel p-5 mb-5 flex justify-between items-center cursor-pointer active:scale-95 transition">
+        <!-- Daily Bonus -->
+        <div onclick="window.doDaily()" class="glass p-5 mb-5 flex justify-between items-center cursor-pointer relative overflow-hidden group">
+            <div class="absolute inset-0 bg-blue-600/5 group-hover:bg-blue-600/10 transition"></div>
             <div>
-                <h2 class="text-lg font-bold">Daily Check-in</h2>
-                <p class="text-xs text-gray-400">Get <span class="text-yellow-400 font-bold">৳<span id="daily-amt">0</span></span> every 24h</p>
+                <h3 class="font-bold text-lg text-white">Daily Bonus</h3>
+                <p class="text-xs text-gray-400 mt-1">Get <span class="text-yellow-400 font-bold">৳<span id="daily-reward">0</span></span> every 24h</p>
             </div>
-            <i class="fas fa-gift text-3xl text-blue-500"></i>
+            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <i class="fas fa-gift text-2xl text-white"></i>
+            </div>
         </div>
 
+        <!-- Buttons -->
         <div class="grid grid-cols-2 gap-4">
-            <div onclick="openSupport()" class="glass-panel p-4 text-center cursor-pointer"><i class="fab fa-telegram text-3xl text-sky-500"></i><p class="text-xs mt-2">Support</p></div>
-            <div onclick="nav('task', this)" class="glass-panel p-4 text-center cursor-pointer"><i class="fas fa-tasks text-3xl text-green-500"></i><p class="text-xs mt-2">Start Task</p></div>
+            <div onclick="window.openLink(config.support_link)" class="glass p-4 text-center cursor-pointer active:scale-95 transition">
+                <i class="fab fa-telegram text-3xl text-sky-500 mb-2"></i>
+                <p class="text-xs font-bold text-gray-300">Support</p>
+            </div>
+            <div onclick="window.nav('p-task')" class="glass p-4 text-center cursor-pointer active:scale-95 transition">
+                <i class="fas fa-coins text-3xl text-yellow-500 mb-2"></i>
+                <p class="text-xs font-bold text-gray-300">Earn More</p>
+            </div>
         </div>
     </div>
 
-    <!-- TASK PAGE -->
-    <div id="task" class="page-section px-4">
-        <h2 class="text-lg font-bold mb-4 border-l-4 border-blue-500 pl-3">Earn Money</h2>
-        <div id="task-list" class="space-y-3"></div>
+    <!-- 2. TASK PAGE -->
+    <div id="p-task" class="page px-4">
+        <h2 class="font-bold text-lg mb-4 text-white border-l-4 border-blue-500 pl-3">Task List</h2>
+        <div id="task-list" class="space-y-3">
+            <p class="text-center text-gray-500 py-10">Loading tasks...</p>
+        </div>
     </div>
 
-    <!-- REFERRAL PAGE -->
-    <div id="referral" class="page-section px-4">
-        <div class="glass-panel p-6 text-center">
-            <h2 class="text-xl font-bold mb-2">Invite Friends</h2>
-            <p class="text-xs text-gray-400 mb-4">Earn <span id="ref-bonus">0</span> per refer.</p>
-            <div class="bg-slate-900 p-3 rounded mb-4 break-all text-xs text-blue-400 font-mono" id="ref-link">...</div>
-            <button onclick="copyRef()" class="bg-blue-600 px-6 py-2 rounded-full text-sm font-bold">Copy Link</button>
+    <!-- 3. REFER PAGE -->
+    <div id="p-refer" class="page px-4">
+        <div class="glass p-6 text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+            <i class="fas fa-users text-4xl text-purple-400 mb-3"></i>
+            <h2 class="text-xl font-bold mb-1">Invite Friends</h2>
+            <p class="text-xs text-gray-400 mb-4">You get <span class="text-green-400 font-bold">৳<span id="ref-bonus">0</span></span> per invite!</p>
+            
+            <div class="bg-slate-900 border border-slate-700 p-3 rounded-lg flex items-center justify-between gap-2 mb-4">
+                <div class="text-left overflow-hidden">
+                    <p class="text-[10px] text-gray-500 uppercase">Your Link</p>
+                    <p id="ref-link" class="text-xs text-blue-400 truncate w-40 font-mono">...</p>
+                </div>
+                <button onclick="window.copyRef()" class="bg-blue-600 px-3 py-1.5 rounded text-xs font-bold hover:bg-blue-700">Copy</button>
+            </div>
         </div>
+
         <div class="mt-6">
-            <h3 class="font-bold text-sm mb-2">My Referrals (<span id="ref-count">0</span>)</h3>
-            <div id="ref-list" class="space-y-2 text-xs text-gray-400">Loading...</div>
+            <h3 class="font-bold text-sm mb-3 flex items-center gap-2">
+                <i class="fas fa-user-friends text-blue-500"></i> My Team (<span id="ref-count">0</span>)
+            </h3>
+            <div id="ref-list" class="space-y-2 text-xs max-h-64 overflow-y-auto"></div>
         </div>
     </div>
 
-    <!-- WALLET PAGE -->
-    <div id="wallet" class="page-section px-4">
-        <div class="glass-panel p-6 text-center mb-6">
-            <p class="text-gray-400 text-xs">Available Balance</p>
-            <h1 class="text-4xl font-bold mt-2 text-green-400">৳<span id="w-bal">0.00</span></h1>
+    <!-- 4. WALLET PAGE -->
+    <div id="p-wallet" class="page px-4">
+        <div class="glass p-6 text-center mb-6">
+            <p class="text-xs text-gray-400 uppercase tracking-widest">Total Balance</p>
+            <h1 class="text-4xl font-bold text-green-400 mt-2 drop-shadow-md">৳<span id="w-bal">0.00</span></h1>
         </div>
-        
-        <h3 class="text-xs text-gray-400 mb-2 uppercase">Select Method</h3>
-        <div id="pay-methods" class="grid grid-cols-3 gap-3 mb-6"></div>
 
-        <input type="number" id="w-amount" placeholder="Amount (৳)" class="w-full bg-slate-800 p-3 rounded mb-3 text-white outline-none border border-slate-600">
-        <input type="number" id="w-number" placeholder="Account Number" class="w-full bg-slate-800 p-3 rounded mb-4 text-white outline-none border border-slate-600">
-        
-        <button onclick="requestWithdraw()" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 py-3 rounded-lg font-bold shadow-lg">WITHDRAW</button>
-        
-        <p class="text-[10px] text-red-400 mt-2 text-center">*Minimum 2 Referrals Required to Withdraw.</p>
+        <p class="text-xs text-gray-400 mb-2 font-bold ml-1">SELECT METHOD</p>
+        <div id="methods" class="grid grid-cols-3 gap-3 mb-6"></div>
 
-        <div class="mt-8">
-            <h3 class="font-bold text-sm mb-3 border-b border-slate-700 pb-2">History</h3>
-            <div id="w-history" class="space-y-2"></div>
+        <input type="number" id="w-amount" placeholder="Amount (৳)" class="w-full bg-slate-800 border border-slate-600 p-3 rounded-lg mb-3 text-white outline-none focus:border-blue-500">
+        <input type="number" id="w-number" placeholder="Account Number" class="w-full bg-slate-800 border border-slate-600 p-3 rounded-lg mb-4 text-white outline-none focus:border-blue-500">
+        
+        <button onclick="window.doWithdraw()" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 py-3.5 rounded-xl font-bold shadow-lg shadow-blue-500/20 active:scale-95 transition">WITHDRAW NOW</button>
+        
+        <div class="bg-red-500/10 border border-red-500/20 p-2 rounded mt-3 text-center">
+            <p class="text-[10px] text-red-300">⚠️ Requirement: Minimum <span id="min-ref" class="font-bold text-white">2</span> Referrals needed.</p>
+        </div>
+
+        <div class="mt-8 pb-10">
+            <h3 class="font-bold text-sm mb-3 border-b border-gray-700 pb-2">History</h3>
+            <div id="history" class="space-y-2 text-xs"></div>
         </div>
     </div>
 
     <!-- SPIN MODAL -->
-    <div id="spin-modal" class="modal-overlay">
-        <div class="glass-panel p-8 flex flex-col items-center">
-            <h2 class="text-xl font-bold mb-4">Lucky Spin</h2>
-            <div class="w-40 h-40 rounded-full border-4 border-dashed border-blue-500 flex items-center justify-center animate-spin-slow mb-6" id="spin-wheel">
-                <i class="fas fa-star text-5xl text-yellow-400"></i>
+    <div id="spin-modal" class="modal">
+        <div class="glass p-8 flex flex-col items-center w-80 relative">
+            <button onclick="document.getElementById('spin-modal').style.display='none'" class="absolute top-2 right-3 text-gray-400"><i class="fas fa-times"></i></button>
+            <h2 class="text-xl font-bold mb-6">Lucky Spin</h2>
+            
+            <div class="w-40 h-40 rounded-full border-4 border-dashed border-blue-500 flex items-center justify-center mb-6 bg-slate-800 relative overflow-hidden shadow-[0_0_20px_rgba(59,130,246,0.5)]">
+                <i id="spin-icon" class="fas fa-star text-6xl text-yellow-400"></i>
             </div>
-            <p id="spin-msg" class="text-sm text-gray-300 mb-4">Watch Ad to Claim Reward!</p>
-            <button onclick="doSpin()" id="spin-btn" class="bg-green-500 px-8 py-2 rounded-full font-bold">SPIN NOW</button>
-            <button onclick="closeSpin()" class="mt-4 text-xs text-gray-500">Close</button>
+            
+            <p id="spin-status" class="text-sm text-center text-gray-300 mb-6 bg-slate-800 px-3 py-1 rounded">Watch Ad first to Spin!</p>
+            
+            <button onclick="window.startSpinProcess()" id="spin-btn" class="w-full bg-green-500 hover:bg-green-600 py-3 rounded-full font-bold shadow-lg transition animate-pulse">START SPIN</button>
         </div>
     </div>
 
-    <!-- NAV BAR -->
-    <div class="fixed bottom-0 w-full bg-[#0f172a] border-t border-slate-800 flex justify-around pb-5 pt-3 z-40">
-        <div onclick="nav('home', this)" class="nav-item active text-center w-1/4"><i class="fas fa-home text-xl"></i></div>
-        <div onclick="nav('task', this)" class="nav-item text-center w-1/4"><i class="fas fa-layer-group text-xl"></i></div>
-        <div onclick="nav('referral', this)" class="nav-item text-center w-1/4"><i class="fas fa-users text-xl"></i></div>
-        <div onclick="nav('wallet', this)" class="nav-item text-center w-1/4"><i class="fas fa-wallet text-xl"></i></div>
+    <!-- BOTTOM NAV -->
+    <div class="fixed bottom-0 w-full bg-[#0f172a] border-t border-gray-800 flex justify-around py-3 pb-5 z-40 shadow-2xl">
+        <div onclick="window.nav('p-home', this)" class="nav-btn active text-center w-1/4 cursor-pointer"><i class="fas fa-home text-xl mb-1"></i><p class="text-[10px]">Home</p></div>
+        <div onclick="window.nav('p-task', this)" class="nav-btn text-center w-1/4 cursor-pointer"><i class="fas fa-layer-group text-xl mb-1"></i><p class="text-[10px]">Task</p></div>
+        <div onclick="window.nav('p-refer', this)" class="nav-btn text-center w-1/4 cursor-pointer"><i class="fas fa-user-plus text-xl mb-1"></i><p class="text-[10px]">Refer</p></div>
+        <div onclick="window.nav('p-wallet', this)" class="nav-btn text-center w-1/4 cursor-pointer"><i class="fas fa-wallet text-xl mb-1"></i><p class="text-[10px]">Wallet</p></div>
     </div>
 
     <script src="script.js"></script>
