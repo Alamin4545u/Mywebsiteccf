@@ -9,172 +9,596 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Giga Pub Script (Ad Network) -->
+    <!-- আপনার সঠিক Zone ID বসান যদি আলাদা হয় -->
+    <script src="https://ad.gigapub.tech/script?id=4413"></script>
+    
+    <!-- Styles -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        body { background-color: #0f172a; color: white; font-family: sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
-        .glass { background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .page { display: none; padding-bottom: 80px; animation: fadeIn 0.3s; }
-        .page.active { display: block; }
+        body { background-color: #0f172a; color: white; font-family: 'Poppins', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
+        
+        /* Glassmorphism */
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); }
+        
+        /* Animations */
+        .page-section { display: none; padding-bottom: 90px; animation: fadeIn 0.3s ease-in-out; }
+        .page-section.active-page { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .nav-btn.active { color: #3b82f6; transform: scale(1.1); }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 50; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        
+        .nav-item { transition: 0.3s; opacity: 0.6; }
+        .nav-item.active { opacity: 1; color: #3b82f6; transform: translateY(-5px); }
+
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 50; display: none; align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; }
+        
+        /* Select Box */
+        .select-box { border: 2px solid transparent; transition: 0.2s; }
+        .select-box.active { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+        
+        /* Loader */
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <!-- LOADING SCREEN -->
-    <div id="loading-screen" class="fixed inset-0 bg-[#0f172a] z-[100] flex flex-col items-center justify-center">
-        <div class="loader mb-4"></div>
-        <p class="text-blue-400 font-bold animate-pulse">Loading Giga Earn...</p>
+    <!-- VPN ALERT -->
+    <div id="vpn-screen" class="modal-overlay z-[100]">
+        <div class="glass-panel p-6 mx-4 text-center">
+            <i class="fas fa-shield-halved text-5xl text-red-500 mb-4 animate-pulse"></i>
+            <h1 class="text-xl font-bold text-red-400">VPN Required</h1>
+            <p class="text-gray-400 mt-2 text-xs">Connect VPN to verify account & tasks.</p>
+            <div class="bg-slate-800 p-2 rounded mt-4">
+                <p class="text-[10px] text-gray-500 uppercase">Allowed Country</p>
+                <p id="vpn-allowed-list" class="text-green-400 font-bold font-mono text-sm">...</p>
+            </div>
+            <button onclick="document.getElementById('vpn-screen').classList.remove('open')" class="mt-6 bg-slate-600 px-6 py-2 rounded-full font-bold text-sm">Okay</button>
+        </div>
     </div>
-
-    <!-- VPN ALERT MODAL -->
-    <div id="vpn-modal" class="modal">
-        <div class="glass p-6 text-center w-80 border-red-500/50 border">
-            <i class="fas fa-shield-halved text-5xl text-red-500 mb-4"></i>
-            <h2 class="text-xl font-bold mb-2 text-red-400">VPN Required</h2>
-            <p class="text-sm text-gray-300 mb-4">Please connect VPN to:</p>
-            <div id="vpn-countries" class="bg-gray-800 p-2 rounded text-green-400 font-mono font-bold text-sm mb-4">...</div>
-            <button onclick="window.location.reload()" class="bg-slate-700 hover:bg-slate-600 px-6 py-2 rounded-full w-full font-bold transition">Try Again</button>
+    
+    <!-- AD LOADING OVERLAY -->
+    <div id="ad-loader" class="modal-overlay z-[110]">
+        <div class="flex flex-col items-center">
+            <div class="loader mb-4"></div>
+            <p class="text-white font-bold animate-pulse">Loading Ad...</p>
+            <p class="text-xs text-gray-400 mt-2">Please wait, do not close.</p>
         </div>
     </div>
 
     <!-- HEADER -->
-    <div class="fixed top-0 w-full bg-[#0f172a]/95 backdrop-blur p-4 flex justify-between items-center z-40 border-b border-gray-800 shadow-lg">
+    <div class="fixed top-0 w-full z-40 bg-[#0f172a]/95 border-b border-slate-800 px-4 py-3 flex justify-between items-center shadow-lg">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-blue-600/20 flex items-center justify-center border border-blue-500/30">
-                <i class="fas fa-user text-blue-400"></i>
+            <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center border border-slate-500 overflow-hidden">
+                <img id="user-photo" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="w-full h-full object-cover">
             </div>
             <div>
-                <p id="u-name" class="font-bold text-sm text-white">Guest</p>
-                <p class="text-[10px] text-gray-400">ID: <span id="u-id">...</span></p>
+                <h3 id="user-name" class="font-bold text-sm text-white">Loading...</h3>
+                <span class="text-[10px] text-gray-400 bg-slate-800 px-2 py-0.5 rounded">ID: <span id="user-id">...</span></span>
             </div>
         </div>
-        <div class="glass px-4 py-1.5 text-right">
+        <div class="glass-panel px-4 py-1.5 text-right">
             <p class="text-[10px] text-gray-400 uppercase tracking-wider">Balance</p>
-            <p class="font-bold text-lg text-green-400 leading-none">৳<span id="balance">0.00</span></p>
+            <p class="font-bold text-lg text-green-400 leading-none">৳<span id="header-balance">0.00</span></p>
         </div>
     </div>
     <div class="h-20"></div>
 
-    <!-- 1. HOME PAGE -->
-    <div id="p-home" class="page active px-4">
+    <!-- 1. HOME -->
+    <div id="home" class="page-section active-page px-4">
         <!-- Notice -->
-        <div class="bg-amber-500/10 border border-amber-500/20 p-2 rounded-lg mb-5 flex items-center gap-2">
+        <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg p-2 mb-5 flex items-center gap-3">
             <i class="fas fa-bullhorn text-amber-500 animate-pulse"></i>
-            <marquee id="notice" class="text-xs text-amber-100 font-medium">Loading notice...</marquee>
+            <marquee id="home-notice" class="text-xs text-amber-100 font-medium">Loading notice...</marquee>
         </div>
 
         <!-- Daily Bonus -->
-        <div onclick="window.doDaily()" class="glass p-5 mb-5 flex justify-between items-center cursor-pointer relative overflow-hidden group">
-            <div class="absolute inset-0 bg-blue-600/5 group-hover:bg-blue-600/10 transition"></div>
+        <div onclick="dailyCheckin()" class="glass-panel p-5 mb-5 flex justify-between items-center cursor-pointer active:scale-95 transition-transform relative overflow-hidden group">
+            <div class="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition"></div>
             <div>
-                <h3 class="font-bold text-lg text-white">Daily Bonus</h3>
-                <p class="text-xs text-gray-400 mt-1">Get <span class="text-yellow-400 font-bold">৳<span id="daily-reward">0</span></span> every 24h</p>
+                <h2 class="text-lg font-bold text-white">Daily Check-in</h2>
+                <p class="text-xs text-gray-400 mt-1">Reward: <span class="text-yellow-400 font-bold">৳<span id="daily-text">0</span></span></p>
             </div>
-            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <i class="fas fa-gift text-2xl text-white"></i>
+            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <i class="fas fa-calendar-check text-xl text-white"></i>
             </div>
         </div>
 
-        <!-- Buttons -->
+        <!-- Support Buttons -->
         <div class="grid grid-cols-2 gap-4">
-            <div onclick="window.openLink(config.support_link)" class="glass p-4 text-center cursor-pointer active:scale-95 transition">
-                <i class="fab fa-telegram text-3xl text-sky-500 mb-2"></i>
-                <p class="text-xs font-bold text-gray-300">Support</p>
+            <div onclick="openSupport()" class="glass-panel p-4 flex flex-col items-center justify-center gap-2 cursor-pointer active:bg-slate-800">
+                <i class="fab fa-telegram text-3xl text-sky-500"></i>
+                <span class="text-xs font-bold text-gray-300">Support</span>
             </div>
-            <div onclick="window.nav('p-task')" class="glass p-4 text-center cursor-pointer active:scale-95 transition">
-                <i class="fas fa-coins text-3xl text-yellow-500 mb-2"></i>
-                <p class="text-xs font-bold text-gray-300">Earn More</p>
+            <div onclick="openLeaderboard()" class="glass-panel p-4 flex flex-col items-center justify-center gap-2 cursor-pointer active:bg-slate-800">
+                <i class="fas fa-trophy text-3xl text-yellow-500"></i>
+                <span class="text-xs font-bold text-gray-300">Leaders</span>
             </div>
         </div>
     </div>
 
-    <!-- 2. TASK PAGE -->
-    <div id="p-task" class="page px-4">
-        <h2 class="font-bold text-lg mb-4 text-white border-l-4 border-blue-500 pl-3">Task List</h2>
-        <div id="task-list" class="space-y-3">
-            <p class="text-center text-gray-500 py-10">Loading tasks...</p>
+    <!-- 2. TASKS -->
+    <div id="task" class="page-section px-4">
+        <h2 class="text-lg font-bold mb-4 pl-3 border-l-4 border-blue-500 text-white">Available Tasks</h2>
+        <div id="task-container" class="space-y-3 pb-20">
+            <div class="text-center text-gray-500 text-sm py-10">Loading tasks...</div>
         </div>
     </div>
 
-    <!-- 3. REFER PAGE -->
-    <div id="p-refer" class="page px-4">
-        <div class="glass p-6 text-center relative overflow-hidden">
+    <!-- 3. REFERRAL -->
+    <div id="referral" class="page-section px-4">
+        <div class="glass-panel p-6 text-center mt-2 relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
-            <i class="fas fa-users text-4xl text-purple-400 mb-3"></i>
-            <h2 class="text-xl font-bold mb-1">Invite Friends</h2>
-            <p class="text-xs text-gray-400 mb-4">You get <span class="text-green-400 font-bold">৳<span id="ref-bonus">0</span></span> per invite!</p>
+            <img src="https://cdn-icons-png.flaticon.com/512/1256/1256650.png" class="w-20 mx-auto mb-4 drop-shadow-lg">
             
-            <div class="bg-slate-900 border border-slate-700 p-3 rounded-lg flex items-center justify-between gap-2 mb-4">
+            <h2 class="text-xl font-bold text-white mb-1">Invite Friends</h2>
+            <p class="text-xs text-gray-400 mb-6 px-4">
+                Get <span class="text-green-400 font-bold">৳<span id="ref-bonus">0</span></span> per invite + 
+                <span class="text-yellow-400 font-bold"><span id="ref-comm">0</span>%</span> task commission!
+            </p>
+
+            <div class="bg-slate-900 border border-slate-700 rounded-xl p-3 flex justify-between gap-3 items-center">
                 <div class="text-left overflow-hidden">
-                    <p class="text-[10px] text-gray-500 uppercase">Your Link</p>
-                    <p id="ref-link" class="text-xs text-blue-400 truncate w-40 font-mono">...</p>
+                    <p class="text-[10px] text-gray-500">Your Referral Link</p>
+                    <p id="ref-link" class="text-xs text-blue-400 truncate w-48 font-mono">Loading...</p>
                 </div>
-                <button onclick="window.copyRef()" class="bg-blue-600 px-3 py-1.5 rounded text-xs font-bold hover:bg-blue-700">Copy</button>
+                <button onclick="copyRef()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition">
+                    <i class="fas fa-copy"></i>
+                </button>
             </div>
         </div>
 
-        <div class="mt-6">
-            <h3 class="font-bold text-sm mb-3 flex items-center gap-2">
-                <i class="fas fa-user-friends text-blue-500"></i> My Team (<span id="ref-count">0</span>)
+        <div class="mt-8">
+            <h3 class="font-bold text-sm text-gray-300 mb-3 flex items-center gap-2">
+                <i class="fas fa-users text-blue-500"></i> My Referrals
             </h3>
-            <div id="ref-list" class="space-y-2 text-xs max-h-64 overflow-y-auto"></div>
-        </div>
-    </div>
-
-    <!-- 4. WALLET PAGE -->
-    <div id="p-wallet" class="page px-4">
-        <div class="glass p-6 text-center mb-6">
-            <p class="text-xs text-gray-400 uppercase tracking-widest">Total Balance</p>
-            <h1 class="text-4xl font-bold text-green-400 mt-2 drop-shadow-md">৳<span id="w-bal">0.00</span></h1>
-        </div>
-
-        <p class="text-xs text-gray-400 mb-2 font-bold ml-1">SELECT METHOD</p>
-        <div id="methods" class="grid grid-cols-3 gap-3 mb-6"></div>
-
-        <input type="number" id="w-amount" placeholder="Amount (৳)" class="w-full bg-slate-800 border border-slate-600 p-3 rounded-lg mb-3 text-white outline-none focus:border-blue-500">
-        <input type="number" id="w-number" placeholder="Account Number" class="w-full bg-slate-800 border border-slate-600 p-3 rounded-lg mb-4 text-white outline-none focus:border-blue-500">
-        
-        <button onclick="window.doWithdraw()" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 py-3.5 rounded-xl font-bold shadow-lg shadow-blue-500/20 active:scale-95 transition">WITHDRAW NOW</button>
-        
-        <div class="bg-red-500/10 border border-red-500/20 p-2 rounded mt-3 text-center">
-            <p class="text-[10px] text-red-300">⚠️ Requirement: Minimum <span id="min-ref" class="font-bold text-white">2</span> Referrals needed.</p>
-        </div>
-
-        <div class="mt-8 pb-10">
-            <h3 class="font-bold text-sm mb-3 border-b border-gray-700 pb-2">History</h3>
-            <div id="history" class="space-y-2 text-xs"></div>
-        </div>
-    </div>
-
-    <!-- SPIN MODAL -->
-    <div id="spin-modal" class="modal">
-        <div class="glass p-8 flex flex-col items-center w-80 relative">
-            <button onclick="document.getElementById('spin-modal').style.display='none'" class="absolute top-2 right-3 text-gray-400"><i class="fas fa-times"></i></button>
-            <h2 class="text-xl font-bold mb-6">Lucky Spin</h2>
-            
-            <div class="w-40 h-40 rounded-full border-4 border-dashed border-blue-500 flex items-center justify-center mb-6 bg-slate-800 relative overflow-hidden shadow-[0_0_20px_rgba(59,130,246,0.5)]">
-                <i id="spin-icon" class="fas fa-star text-6xl text-yellow-400"></i>
+            <div id="referral-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                <div class="text-center text-xs text-gray-500 py-4">Checking referrals...</div>
             </div>
-            
-            <p id="spin-status" class="text-sm text-center text-gray-300 mb-6 bg-slate-800 px-3 py-1 rounded">Watch Ad first to Spin!</p>
-            
-            <button onclick="window.startSpinProcess()" id="spin-btn" class="w-full bg-green-500 hover:bg-green-600 py-3 rounded-full font-bold shadow-lg transition animate-pulse">START SPIN</button>
+        </div>
+    </div>
+
+    <!-- 4. WALLET -->
+    <div id="wallet" class="page-section px-4">
+        <div class="glass-panel p-6 text-center mb-6">
+            <p class="text-gray-400 text-xs uppercase tracking-widest">Total Balance</p>
+            <h1 class="text-4xl font-bold mt-2 text-green-400 drop-shadow-lg">৳ <span id="wallet-balance">0.00</span></h1>
+        </div>
+
+        <!-- Payment Method -->
+        <h3 class="font-bold text-xs text-gray-400 mb-2 uppercase ml-1">Select Method</h3>
+        <div id="method-container" class="grid grid-cols-3 gap-3 mb-6">
+            <!-- JS will inject methods here -->
+        </div>
+
+        <!-- Amount -->
+        <h3 class="font-bold text-xs text-gray-400 mb-2 uppercase ml-1">Select Amount</h3>
+        <div class="grid grid-cols-4 gap-2 mb-6">
+            <div onclick="setAmount(20)" id="amt-20" class="select-box glass-panel py-3 text-center text-xs font-bold cursor-pointer">20</div>
+            <div onclick="setAmount(50)" id="amt-50" class="select-box glass-panel py-3 text-center text-xs font-bold cursor-pointer">50</div>
+            <div onclick="setAmount(100)" id="amt-100" class="select-box glass-panel py-3 text-center text-xs font-bold cursor-pointer">100</div>
+            <div onclick="setAmount(200)" id="amt-200" class="select-box glass-panel py-3 text-center text-xs font-bold cursor-pointer">200</div>
+        </div>
+
+        <input type="number" id="wallet-phone" placeholder="Enter Account Number" class="w-full bg-slate-800 border border-slate-600 p-3 rounded-lg text-white mb-4 outline-none focus:border-blue-500 transition">
+        
+        <button onclick="withdraw()" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 py-3.5 rounded-xl font-bold text-white shadow-lg shadow-blue-600/20 active:scale-95 transition">
+            WITHDRAW NOW
+        </button>
+        
+        <div class="mt-8 pb-10">
+            <h3 class="font-bold text-sm text-gray-400 mb-3 border-b border-slate-700 pb-2">History</h3>
+            <div id="history-list" class="space-y-2"></div>
         </div>
     </div>
 
     <!-- BOTTOM NAV -->
-    <div class="fixed bottom-0 w-full bg-[#0f172a] border-t border-gray-800 flex justify-around py-3 pb-5 z-40 shadow-2xl">
-        <div onclick="window.nav('p-home', this)" class="nav-btn active text-center w-1/4 cursor-pointer"><i class="fas fa-home text-xl mb-1"></i><p class="text-[10px]">Home</p></div>
-        <div onclick="window.nav('p-task', this)" class="nav-btn text-center w-1/4 cursor-pointer"><i class="fas fa-layer-group text-xl mb-1"></i><p class="text-[10px]">Task</p></div>
-        <div onclick="window.nav('p-refer', this)" class="nav-btn text-center w-1/4 cursor-pointer"><i class="fas fa-user-plus text-xl mb-1"></i><p class="text-[10px]">Refer</p></div>
-        <div onclick="window.nav('p-wallet', this)" class="nav-btn text-center w-1/4 cursor-pointer"><i class="fas fa-wallet text-xl mb-1"></i><p class="text-[10px]">Wallet</p></div>
+    <div class="fixed bottom-0 w-full bg-[#0f172a] border-t border-slate-800 flex justify-around items-end pb-5 pt-3 z-40 shadow-2xl">
+        <div onclick="nav('home', this)" class="nav-item active w-1/4 text-center cursor-pointer">
+            <i class="fas fa-home text-xl mb-1"></i><p class="text-[10px] font-medium">Home</p>
+        </div>
+        <div onclick="nav('task', this)" class="nav-item w-1/4 text-center cursor-pointer">
+            <i class="fas fa-layer-group text-xl mb-1"></i><p class="text-[10px] font-medium">Tasks</p>
+        </div>
+        <div onclick="nav('referral', this)" class="nav-item w-1/4 text-center cursor-pointer">
+            <i class="fas fa-gift text-xl mb-1"></i><p class="text-[10px] font-medium">Refer</p>
+        </div>
+        <div onclick="nav('wallet', this)" class="nav-item w-1/4 text-center cursor-pointer">
+            <i class="fas fa-wallet text-xl mb-1"></i><p class="text-[10px] font-medium">Wallet</p>
+        </div>
     </div>
 
-    <script src="script.js"></script>
+    <!-- SPIN MODAL -->
+    <div id="spin-modal" class="modal-overlay">
+        <div class="flex flex-col items-center">
+            <h2 class="text-xl font-bold mb-4">Lucky Spin</h2>
+            <div class="w-64 h-64 rounded-full border-4 border-blue-500 flex items-center justify-center bg-slate-800 relative overflow-hidden">
+                <i class="fas fa-star text-6xl text-yellow-400 animate-spin-slow"></i>
+                <div id="spin-result" class="absolute inset-0 flex items-center justify-center bg-black/80 hidden">
+                    <p class="text-2xl font-bold text-green-400">+৳<span id="spin-win-amt">0</span></p>
+                </div>
+            </div>
+            <button onclick="executeSpin()" id="spin-btn" class="mt-6 bg-green-500 px-10 py-3 rounded-full font-bold animate-pulse">SPIN NOW</button>
+            <button onclick="document.getElementById('spin-modal').classList.remove('open')" class="mt-4 text-gray-400 underline">Close</button>
+        </div>
+    </div>
+
+    <!-- LEADERBOARD MODAL -->
+    <div id="leader-modal" class="modal-overlay z-[60]">
+        <div class="bg-[#1e293b] w-11/12 max-w-sm rounded-2xl p-5 border border-slate-700">
+            <div class="flex justify-between mb-4"><h3 class="font-bold text-yellow-400">Top Leaders</h3><button onclick="document.getElementById('leader-modal').classList.remove('open')"><i class="fas fa-times"></i></button></div>
+            <div id="lb-list" class="space-y-3 max-h-[300px] overflow-y-auto text-xs"></div>
+        </div>
+    </div>
+
+    <script>
+        // 1. CONFIGURATION
+        const SUPABASE_URL = 'https://jnoavdzcbmskwoectioc.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impub2F2ZHpjYm1za3dvZWN0aW9jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4MDA4ODcsImV4cCI6MjA3OTM3Njg4N30.x3O1xvNMQfqLZ507nfgDcjFJ3faen-uq6l7mrx47NH8';
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const tg = window.Telegram.WebApp;
+
+        // Initialize
+        tg.expand();
+        tg.enableClosingConfirmation();
+
+        // Global State
+        let user = null;
+        let config = {};
+        let wMethod = null;
+        let wAmount = null;
+        let spinRewardTemp = 0;
+
+        // ==========================================
+        // CORE APP LOGIC
+        // ==========================================
+
+        async function initApp() {
+            console.log("App Initializing...");
+
+            // A. Fetch Config
+            const { data: cfgData } = await db.from('app_config').select('*');
+            if(cfgData) cfgData.forEach(c => config[c.key] = c.value);
+            
+            // UI Updates
+            document.getElementById('home-notice').innerText = config.home_notice || 'Welcome';
+            document.getElementById('daily-text').innerText = config.daily_checkin_reward || '0';
+            document.getElementById('ref-bonus').innerText = config.refer_bonus_fixed || '0';
+            document.getElementById('ref-comm').innerText = config.refer_commission_percent || '0';
+            document.getElementById('vpn-allowed-list').innerText = config.allowed_countries || 'Global';
+
+            // B. AUTHENTICATION & REFERRAL FIX
+            const tgUser = tg.initDataUnsafe.user || {id: 777000, first_name: "TestUser"};
+            
+            // *** FIXED REFERRAL CAPTURE ***
+            // Telegram 'start_param' থেকে রেফার আইডি নেওয়া
+            let startParam = tg.initDataUnsafe.start_param; 
+            
+            let deviceId = localStorage.getItem('device_id');
+            if(!deviceId) { deviceId = crypto.randomUUID(); localStorage.setItem('device_id', deviceId); }
+
+            // Check if User Exists
+            const { data: exist } = await db.from('users').select('*').eq('telegram_id', tgUser.id).single();
+
+            if (!exist) {
+                console.log("New User Detected. Registering...");
+                await registerUser(tgUser, deviceId, startParam);
+            } else {
+                console.log("Existing User Login.");
+                user = exist;
+                if(user.is_fake_account) { // Banned Check
+                    document.body.innerHTML = '<div class="flex h-screen items-center justify-center text-red-500 font-bold">ACCOUNT SUSPENDED</div>';
+                    return;
+                }
+                updateUI();
+            }
+
+            // Load Data
+            loadTasks();
+            loadReferrals();
+            loadWallet();
+        }
+
+        async function registerUser(tgUser, deviceId, referrerId) {
+            // 1. Validate Referrer (নিজের আইডি যেন না হয়)
+            let validReferrer = null;
+            if (referrerId && parseInt(referrerId) !== tgUser.id) {
+                // চেক করি রেফারার ডাটাবেসে আছে কিনা
+                const { data: refCheck } = await db.from('users').select('id, telegram_id, balance').eq('telegram_id', referrerId).single();
+                if (refCheck) validReferrer = parseInt(referrerId);
+            }
+
+            // 2. Anti-Cheat Check
+            const { data: deviceCheck } = await db.from('users').select('id').eq('device_id', deviceId);
+            const isFake = (deviceCheck && deviceCheck.length > 0);
+
+            // 3. Create User
+            const { data: newUser, error } = await db.from('users').insert([{
+                telegram_id: tgUser.id,
+                first_name: tgUser.first_name,
+                device_id: deviceId,
+                referrer_id: validReferrer,
+                is_fake_account: isFake,
+                balance: 0.00
+            }]).select().single();
+
+            if (error) {
+                console.error("Reg Error:", error);
+                tg.showAlert("Registration Failed!");
+                return;
+            }
+
+            user = newUser;
+            updateUI();
+
+            // 4. *** REFERRAL BONUS ADDITION (FIXED) ***
+            if (validReferrer && !isFake) {
+                const bonus = parseFloat(config.refer_bonus_fixed || 0);
+                if (bonus > 0) {
+                    // রেফারারকে বোনাস দেওয়া
+                    const { data: refUser } = await db.from('users').select('balance').eq('telegram_id', validReferrer).single();
+                    if (refUser) {
+                        const newBal = parseFloat(refUser.balance) + bonus;
+                        await db.from('users').update({ balance: newBal }).eq('telegram_id', validReferrer);
+                        console.log(`Referral Bonus ৳${bonus} sent to ${validReferrer}`);
+                    }
+                }
+            }
+        }
+
+        function updateUI() {
+            if(!user) return;
+            document.getElementById('user-name').innerText = user.first_name;
+            document.getElementById('user-id').innerText = user.telegram_id;
+            document.getElementById('header-balance').innerText = user.balance.toFixed(2);
+            document.getElementById('wallet-balance').innerText = user.balance.toFixed(2);
+            
+            // Dynamic Referral Link
+            const botUser = config.bot_username || "YourBotName";
+            document.getElementById('ref-link').innerText = `https://t.me/${botUser}?start=${user.telegram_id}`;
+        }
+
+        // ==========================================
+        // VPN & TASK SYSTEM (FIXED ADS)
+        // ==========================================
+
+        async function checkVPN() {
+            if(config.vpn_required !== 'true') return true;
+            try {
+                const res = await fetch('https://ipinfo.io/json?token=1151161c93b97a');
+                const data = await res.json();
+                const allowed = (config.allowed_countries || '').split(',').map(s => s.trim().toUpperCase());
+                
+                if(allowed.includes(data.country.toUpperCase())) return true;
+                
+                document.getElementById('vpn-screen').classList.add('open');
+                return false;
+            } catch(e) {
+                // VPN চেক ফেইল করলে বাইপাস না করে ওয়ার্নিং দিন
+                tg.showAlert("Checking Connection Failed!");
+                return false;
+            }
+        }
+
+        async function loadTasks() {
+            const { data: tasks } = await db.from('tasks').select('*').eq('is_active', true).order('reward');
+            const c = document.getElementById('task-container');
+            c.innerHTML = '';
+            
+            if(tasks) tasks.forEach(t => {
+                c.innerHTML += `
+                <div class="glass-panel p-4 flex justify-between items-center">
+                    <div class="flex gap-3 items-center">
+                        <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                            <i class="${t.icon_class||'fas fa-star'} text-blue-400"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-sm">${t.title}</h3>
+                            <p class="text-[10px] text-gray-400">Limit: ${t.daily_limit || 1}/day</p>
+                        </div>
+                    </div>
+                    <button onclick="startTask('${t.type}', ${t.reward})" 
+                        class="bg-blue-600 px-4 py-1.5 rounded text-xs font-bold shadow hover:bg-blue-700 active:scale-95 transition">
+                        +৳${t.reward}
+                    </button>
+                </div>`;
+            });
+        }
+
+        // *** FIXED AD LOGIC ***
+        window.startTask = async (type, reward) => {
+            // 1. VPN Check
+            tg.MainButton.showProgress();
+            const vpnOk = await checkVPN();
+            tg.MainButton.hideProgress();
+            if(!vpnOk) return;
+
+            if(type === 'spin') {
+                spinRewardTemp = reward;
+                document.getElementById('spin-modal').classList.add('open');
+            } else {
+                // 2. Ad Show Logic
+                document.getElementById('ad-loader').classList.add('open'); // লোডার দেখান
+                
+                try {
+                    if (typeof window.showGiga === 'function') {
+                        // Ad দেখানো এবং শেষ হওয়ার জন্য অপেক্ষা করা
+                        await window.showGiga();
+                        
+                        // Ad সফল হলে এখানে আসবে
+                        document.getElementById('ad-loader').classList.remove('open');
+                        await giveReward(reward);
+                    } else {
+                        throw new Error("Ad script not loaded");
+                    }
+                } catch (error) {
+                    document.getElementById('ad-loader').classList.remove('open');
+                    console.error("Ad Error:", error);
+                    // Ad ফেইল করলে ইউজারকে জানান
+                    tg.showAlert("Ad failed to load! Try again later.");
+                }
+            }
+        }
+
+        // *** REWARD & COMMISSION ***
+        async function giveReward(amount) {
+            const val = parseFloat(amount);
+            
+            // 1. Add Balance to User
+            const newBal = parseFloat(user.balance) + val;
+            await db.from('users').update({ balance: newBal }).eq('telegram_id', user.telegram_id);
+            user.balance = newBal;
+            updateUI();
+            tg.showAlert(`Success! You earned ৳${val}`);
+
+            // 2. Commission for Referrer
+            if (user.referrer_id && config.refer_commission_percent > 0) {
+                const commPercent = parseFloat(config.refer_commission_percent);
+                const commission = (val * commPercent) / 100;
+                
+                if (commission > 0) {
+                    const { data: r } = await db.from('users').select('balance').eq('telegram_id', user.referrer_id).single();
+                    if (r) {
+                        await db.from('users').update({ balance: r.balance + commission }).eq('telegram_id', user.referrer_id);
+                        console.log(`Referral commission sent: ${commission}`);
+                    }
+                }
+            }
+        }
+
+        // ==========================================
+        // EXTRAS
+        // ==========================================
+
+        window.executeSpin = () => {
+            document.getElementById('spin-btn').disabled = true;
+            setTimeout(() => {
+                document.getElementById('spin-result').classList.remove('hidden');
+                document.getElementById('spin-win-amt').innerText = spinRewardTemp;
+                giveReward(spinRewardTemp);
+                setTimeout(() => {
+                    document.getElementById('spin-modal').classList.remove('open');
+                    document.getElementById('spin-result').classList.add('hidden');
+                    document.getElementById('spin-btn').disabled = false;
+                }, 2000);
+            }, 2000);
+        }
+
+        window.dailyCheckin = async () => {
+            const today = new Date().toDateString();
+            if (user.last_checkin === today) return tg.showAlert("Already collected today!");
+            
+            const vpnOk = await checkVPN();
+            if(!vpnOk) return;
+
+            const reward = parseFloat(config.daily_checkin_reward);
+            // আপডেট ডেট এবং ব্যালেন্স
+            await db.from('users').update({ balance: user.balance + reward, last_checkin: today }).eq('telegram_id', user.telegram_id);
+            
+            user.balance += reward;
+            user.last_checkin = today;
+            updateUI();
+            tg.showAlert(`Daily Bonus ৳${reward} Added!`);
+        }
+
+        async function loadReferrals() {
+            // শুধু সেই ইউজারদের দেখান যারা এই ইউজার দ্বারা রেফার হয়েছে
+            const { data: refs } = await db.from('users').select('*').eq('referrer_id', user.telegram_id).order('created_at', {ascending:false});
+            const c = document.getElementById('referral-list');
+            c.innerHTML = '';
+            
+            if(refs && refs.length > 0) {
+                refs.forEach(r => {
+                    const status = r.is_fake_account ? '<span class="text-red-400">Fake</span>' : '<span class="text-green-400">Valid</span>';
+                    c.innerHTML += `<div class="glass-panel p-2 flex justify-between items-center text-xs"><div><b>${r.first_name}</b></div>${status}</div>`;
+                });
+            } else {
+                c.innerHTML = '<div class="text-center text-xs text-gray-500 py-4">No referrals yet. Share your link!</div>';
+            }
+        }
+
+        window.openLeaderboard = async () => {
+            document.getElementById('leader-modal').classList.add('open');
+            const {data} = await db.from('users').select('first_name,balance').order('balance',{ascending:false}).limit(10);
+            document.getElementById('lb-list').innerHTML = data.map((u,i)=>`<div class="flex justify-between bg-slate-800 p-2 rounded text-xs"><span>#${i+1} ${u.first_name}</span><span class="text-green-400">৳${u.balance.toFixed(2)}</span></div>`).join('');
+        }
+
+        // ==========================================
+        // WALLET SYSTEM
+        // ==========================================
+
+        async function loadWallet() {
+            // Load Methods from DB
+            const { data: methods } = await db.from('payment_methods').select('*').eq('is_active', true);
+            const c = document.getElementById('method-container');
+            c.innerHTML = '';
+            
+            if(methods) methods.forEach(m => {
+                c.innerHTML += `
+                <div onclick="setMethod('${m.name}')" id="opt-${m.name}" class="select-box glass-panel p-2 flex flex-col items-center cursor-pointer rounded-lg hover:bg-slate-700">
+                    <img src="${m.logo_url}" class="h-6 mb-1 object-contain">
+                    <span class="text-[10px] font-bold">${m.name}</span>
+                </div>`;
+            });
+
+            // Load History
+            const { data: hist } = await db.from('withdrawals').select('*').eq('telegram_id', user.telegram_id).order('created_at', {ascending:false}).limit(5);
+            const h = document.getElementById('history-list');
+            h.innerHTML = hist ? hist.map(i=>`<div class="glass-panel p-2 flex justify-between text-xs"><span>${i.method} - ৳${i.amount}</span><span class="${i.status=='paid'?'text-green-400':i.status=='pending'?'text-yellow-400':'text-red-400'} uppercase">${i.status}</span></div>`).join('') : '';
+        }
+
+        window.setMethod = (m) => {
+            wMethod = m;
+            document.querySelectorAll('.select-box').forEach(e => { if(e.id.startsWith('opt')) e.classList.remove('active'); });
+            document.getElementById(`opt-${m}`).classList.add('active');
+        }
+
+        window.setAmount = (a) => {
+            wAmount = a;
+            document.querySelectorAll('.select-box').forEach(e => { if(e.id.startsWith('amt')) e.classList.remove('active'); });
+            document.getElementById(`amt-${a}`).classList.add('active');
+        }
+
+        window.withdraw = async () => {
+            const num = document.getElementById('wallet-phone').value;
+            if(!wMethod || !wAmount || !num) return tg.showAlert("Fill all fields!");
+            if(user.balance < wAmount) return tg.showAlert("Insufficient balance!");
+
+            // Deduct
+            const newBal = user.balance - wAmount;
+            await db.from('users').update({ balance: newBal }).eq('telegram_id', user.telegram_id);
+            user.balance = newBal;
+            
+            // Insert Request
+            await db.from('withdrawals').insert([{
+                telegram_id: user.telegram_id,
+                method: wMethod,
+                amount: wAmount,
+                number: num,
+                status: 'pending'
+            }]);
+
+            updateUI();
+            loadWallet(); // Reload history
+            tg.showAlert("Request Submitted!");
+        }
+
+        // Navigation & Utils
+        window.nav = (id, el) => { 
+            document.querySelectorAll('.page-section').forEach(p=>p.classList.remove('active-page')); 
+            document.getElementById(id).classList.add('active-page'); 
+            document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); 
+            el.classList.add('active'); 
+        }
+        window.copyRef = () => { navigator.clipboard.writeText(document.getElementById('ref-link').innerText); tg.showAlert("Link Copied!"); }
+        window.openSupport = () => tg.openTelegramLink(config.support_link);
+
+        // START APP
+        initApp();
+    </script>
 </body>
 </html>
