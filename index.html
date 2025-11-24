@@ -9,21 +9,21 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Giga Pub Script -->
+    <!-- Giga Pub Script (Ad Network) -->
     <script src="https://ad.gigapub.tech/script?id=4413"></script>
     
-    <!-- Styles -->
+    <!-- Icons & Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
         body { background-color: #0f172a; color: white; font-family: 'Poppins', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
         
-        /* Glassmorphism */
+        /* Glass Effect */
         .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); }
         
-        /* Animations */
-        .page-section { display: none; padding-bottom: 90px; animation: fadeIn 0.3s ease-in-out; }
+        /* Page Transitions */
+        .page-section { display: none; padding-bottom: 100px; animation: fadeIn 0.3s ease-in-out; }
         .page-section.active-page { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
@@ -46,19 +46,15 @@
         <div class="glass-panel p-6 mx-4 text-center">
             <i class="fas fa-shield-halved text-5xl text-red-500 mb-4 animate-pulse"></i>
             <h1 class="text-xl font-bold text-red-400">VPN Required</h1>
-            <p class="text-gray-400 mt-2 text-xs">Connect VPN to verify account & tasks.</p>
-            <div class="bg-slate-800 p-2 rounded mt-4">
-                <p class="text-[10px] text-gray-500 uppercase">Allowed Country</p>
-                <p id="vpn-allowed-list" class="text-green-400 font-bold font-mono text-sm">...</p>
-            </div>
-            <button onclick="document.getElementById('vpn-screen').classList.remove('open')" class="mt-6 bg-slate-600 px-6 py-2 rounded-full font-bold text-sm">Okay</button>
+            <p class="text-gray-400 mt-2 text-xs">Please connect to: <span id="vpn-allowed-list" class="text-green-400 font-bold">...</span></p>
+            <button onclick="location.reload()" class="mt-6 bg-slate-600 px-6 py-2 rounded-full font-bold text-sm">Reload</button>
         </div>
     </div>
 
     <!-- HEADER -->
     <div class="fixed top-0 w-full z-40 bg-[#0f172a]/95 border-b border-slate-800 px-4 py-3 flex justify-between items-center shadow-lg">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center border border-slate-500 overflow-hidden">
+            <div class="w-10 h-10 rounded-full bg-slate-700 overflow-hidden">
                 <img id="user-photo" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="w-full h-full object-cover">
             </div>
             <div>
@@ -67,63 +63,62 @@
             </div>
         </div>
         <div class="glass-panel px-4 py-1.5 text-right">
-            <p class="text-[10px] text-gray-400 uppercase tracking-wider">Balance</p>
+            <p class="text-[10px] text-gray-400 uppercase">Balance</p>
             <p class="font-bold text-lg text-green-400 leading-none">৳<span id="header-balance">0.00</span></p>
         </div>
     </div>
     <div class="h-20"></div>
 
-    <!-- 1. HOME -->
+    <!-- 1. HOME SECTION -->
     <div id="home" class="page-section active-page px-4">
         <!-- Notice -->
         <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg p-2 mb-5 flex items-center gap-3">
             <i class="fas fa-bullhorn text-amber-500 animate-pulse"></i>
-            <marquee id="home-notice" class="text-xs text-amber-100 font-medium">Loading notice...</marquee>
+            <marquee id="home-notice" class="text-xs text-amber-100 font-medium">Loading...</marquee>
         </div>
 
         <!-- Daily Bonus -->
-        <div onclick="dailyCheckin()" class="glass-panel p-5 mb-5 flex justify-between items-center cursor-pointer active:scale-95 transition-transform relative overflow-hidden group">
-            <div class="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition"></div>
+        <div onclick="dailyCheckin()" class="glass-panel p-5 mb-5 flex justify-between items-center cursor-pointer active:scale-95 transition relative overflow-hidden">
             <div>
                 <h2 class="text-lg font-bold text-white">Daily Check-in</h2>
                 <p class="text-xs text-gray-400 mt-1">Reward: <span class="text-yellow-400 font-bold">৳<span id="daily-text">0</span></span></p>
             </div>
-            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                <i class="fas fa-calendar-check text-xl text-white"></i>
+            <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <i class="fas fa-gift text-xl text-white"></i>
             </div>
         </div>
 
-        <!-- Support Buttons -->
+        <!-- Menu Grid -->
         <div class="grid grid-cols-2 gap-4">
             <div onclick="openSupport()" class="glass-panel p-4 flex flex-col items-center justify-center gap-2 cursor-pointer active:bg-slate-800">
                 <i class="fab fa-telegram text-3xl text-sky-500"></i>
-                <span class="text-xs font-bold text-gray-300">Sxpport</span>
+                <span class="text-xs font-bold text-gray-300">Support</span>
             </div>
             <div onclick="openLeaderboard()" class="glass-panel p-4 flex flex-col items-center justify-center gap-2 cursor-pointer active:bg-slate-800">
                 <i class="fas fa-trophy text-3xl text-yellow-500"></i>
-                <span class="text-xs font-bold text-gray-300">Leaders</span>
+                <span class="text-xs font-bold text-gray-300">Top Users</span>
             </div>
         </div>
     </div>
 
-    <!-- 2. TASKS -->
+    <!-- 2. TASKS SECTION -->
     <div id="task" class="page-section px-4">
-        <h2 class="text-lg font-bold mb-4 pl-3 border-l-4 border-blue-500 text-white">Available Tasks</h2>
+        <h2 class="text-lg font-bold mb-4 pl-3 border-l-4 border-blue-500 text-white">Earning Tasks</h2>
         <div id="task-container" class="space-y-3 pb-20">
             <div class="text-center text-gray-500 text-sm py-10">Loading tasks...</div>
         </div>
     </div>
 
-    <!-- 3. REFERRAL -->
+    <!-- 3. REFERRAL SECTION -->
     <div id="referral" class="page-section px-4">
         <div class="glass-panel p-6 text-center mt-2 relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
             <img src="https://cdn-icons-png.flaticon.com/512/1256/1256650.png" class="w-20 mx-auto mb-4 drop-shadow-lg">
             
-            <h2 class="text-xl font-bold text-white mb-1">Invite Friends</h2>
+            <h2 class="text-xl font-bold text-white mb-1">Invite & Earn</h2>
             <p class="text-xs text-gray-400 mb-6 px-4">
                 Get <span class="text-green-400 font-bold">৳<span id="ref-bonus">0</span></span> per invite + 
-                <span class="text-yellow-400 font-bold"><span id="ref-comm">0</span>%</span> task commission!
+                <span class="text-yellow-400 font-bold"><span id="ref-comm">0</span>%</span> commission!
             </p>
 
             <div class="bg-slate-900 border border-slate-700 rounded-xl p-3 flex justify-between gap-3 items-center">
@@ -131,7 +126,7 @@
                     <p class="text-[10px] text-gray-500">Your Referral Link</p>
                     <p id="ref-link" class="text-xs text-blue-400 truncate w-48 font-mono">Loading...</p>
                 </div>
-                <button onclick="copyRef()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition">
+                <button onclick="copyRef()" class="bg-blue-600 text-white px-3 py-2 rounded-lg">
                     <i class="fas fa-copy"></i>
                 </button>
             </div>
@@ -139,25 +134,30 @@
 
         <div class="mt-8">
             <h3 class="font-bold text-sm text-gray-300 mb-3 flex items-center gap-2">
-                <i class="fas fa-users text-blue-500"></i> My Referrals
+                <i class="fas fa-users text-blue-500"></i> My Team (<span id="ref-count-display">0</span>)
             </h3>
             <div id="referral-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
-                <div class="text-center text-xs text-gray-500 py-4">No referrals found.</div>
+                <!-- Referrals will load here -->
             </div>
         </div>
     </div>
 
-    <!-- 4. WALLET -->
+    <!-- 4. WALLET SECTION -->
     <div id="wallet" class="page-section px-4">
         <div class="glass-panel p-6 text-center mb-6">
             <p class="text-gray-400 text-xs uppercase tracking-widest">Total Balance</p>
             <h1 class="text-4xl font-bold mt-2 text-green-400 drop-shadow-lg">৳ <span id="wallet-balance">0.00</span></h1>
         </div>
 
+        <!-- Withdraw Rules -->
+        <div class="bg-red-500/10 border border-red-500/20 p-3 rounded mb-4 text-center">
+            <p class="text-[10px] text-red-300">⚠️ Minimum <span class="font-bold text-white">2 Referrals</span> required to withdraw.</p>
+        </div>
+
         <!-- Payment Method -->
         <h3 class="font-bold text-xs text-gray-400 mb-2 uppercase ml-1">Select Method</h3>
         <div id="method-container" class="grid grid-cols-3 gap-3 mb-6">
-            <!-- JS will inject methods here -->
+            <!-- Methods Injected via JS -->
         </div>
 
         <!-- Amount -->
@@ -169,10 +169,10 @@
             <div onclick="setAmount(200)" id="amt-200" class="select-box glass-panel py-3 text-center text-xs font-bold cursor-pointer">200</div>
         </div>
 
-        <input type="number" id="wallet-phone" placeholder="Enter Account Number" class="w-full bg-slate-800 border border-slate-600 p-3 rounded-lg text-white mb-4 outline-none focus:border-blue-500 transition">
+        <input type="number" id="wallet-phone" placeholder="Enter Account Number" class="w-full bg-slate-800 border border-slate-600 p-3 rounded-lg text-white mb-4 outline-none focus:border-blue-500">
         
         <button onclick="withdraw()" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 py-3.5 rounded-xl font-bold text-white shadow-lg shadow-blue-600/20 active:scale-95 transition">
-            WITHDRAW NOW
+            WITHDRAW MONEY
         </button>
         
         <div class="mt-8 pb-10">
@@ -181,7 +181,7 @@
         </div>
     </div>
 
-    <!-- BOTTOM NAV -->
+    <!-- BOTTOM NAVIGATION -->
     <div class="fixed bottom-0 w-full bg-[#0f172a] border-t border-slate-800 flex justify-around items-end pb-5 pt-3 z-40 shadow-2xl">
         <div onclick="nav('home', this)" class="nav-item active w-1/4 text-center cursor-pointer">
             <i class="fas fa-home text-xl mb-1"></i><p class="text-[10px] font-medium">Home</p>
@@ -190,7 +190,7 @@
             <i class="fas fa-layer-group text-xl mb-1"></i><p class="text-[10px] font-medium">Tasks</p>
         </div>
         <div onclick="nav('referral', this)" class="nav-item w-1/4 text-center cursor-pointer">
-            <i class="fas fa-gift text-xl mb-1"></i><p class="text-[10px] font-medium">Refer</p>
+            <i class="fas fa-user-plus text-xl mb-1"></i><p class="text-[10px] font-medium">Refer</p>
         </div>
         <div onclick="nav('wallet', this)" class="nav-item w-1/4 text-center cursor-pointer">
             <i class="fas fa-wallet text-xl mb-1"></i><p class="text-[10px] font-medium">Wallet</p>
@@ -199,16 +199,17 @@
 
     <!-- SPIN MODAL -->
     <div id="spin-modal" class="modal-overlay">
-        <div class="flex flex-col items-center">
+        <div class="glass-panel p-8 flex flex-col items-center">
             <h2 class="text-xl font-bold mb-4">Lucky Spin</h2>
-            <div class="w-64 h-64 rounded-full border-4 border-blue-500 flex items-center justify-center bg-slate-800 relative overflow-hidden">
-                <i class="fas fa-star text-6xl text-yellow-400 animate-spin-slow"></i>
+            <!-- Spinning Wheel Visual -->
+            <div class="w-64 h-64 rounded-full border-4 border-blue-500 flex items-center justify-center bg-slate-800 relative overflow-hidden mb-6">
+                <i id="spin-icon" class="fas fa-dharmachakra text-8xl text-yellow-400"></i>
                 <div id="spin-result" class="absolute inset-0 flex items-center justify-center bg-black/80 hidden">
                     <p class="text-2xl font-bold text-green-400">+৳<span id="spin-win-amt">0</span></p>
                 </div>
             </div>
-            <button onclick="executeSpin()" id="spin-btn" class="mt-6 bg-green-500 px-10 py-3 rounded-full font-bold animate-pulse">SPIN NOW</button>
-            <button onclick="document.getElementById('spin-modal').classList.remove('open')" class="mt-4 text-gray-400 underline">Close</button>
+            <button onclick="executeSpin()" id="spin-btn" class="w-full bg-green-500 py-3 rounded-full font-bold shadow-lg shadow-green-500/30">START SPIN</button>
+            <button onclick="closeSpin()" class="mt-4 text-sm text-gray-400">Close</button>
         </div>
     </div>
 
