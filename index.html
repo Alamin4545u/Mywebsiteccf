@@ -10,9 +10,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
-    <!-- Giga Pub Script (Ad Network) -->
-    <!-- আপনার সঠিক Zone ID বসান যদি আলাদা হয় -->
-    <script src="https://ad.gigapub.tech/script?id=4413"></script>
+    <!-- OneClick (Onclicka) Script -->
+    <script src="https://js.onclckvd.com/in-stream-ad-admanager/tma.js"></script>
     
     <!-- Styles -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -66,7 +65,7 @@
         <div class="flex flex-col items-center">
             <div class="loader mb-4"></div>
             <p class="text-white font-bold animate-pulse">Loading Ad...</p>
-            <p class="text-xs text-gray-400 mt-2">Please wait, do not close.</p>
+            <p class="text-xs text-gray-400 mt-2">Please wait, watching full ad...</p>
         </div>
     </div>
 
@@ -242,6 +241,11 @@
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         const tg = window.Telegram.WebApp;
 
+        // --- ONCLICKA AD CONFIG ---
+        // আপনার স্ক্রিনশট থেকে পাওয়া Spot ID
+        const ONCLICKA_SPOT_ID = '6099062'; 
+        let showOnclickaAd = null; // এখানে অ্যাড ফাংশন স্টোর হবে
+
         // Initialize
         tg.expand();
         tg.enableClosingConfirmation();
@@ -259,6 +263,20 @@
 
         async function initApp() {
             console.log("App Initializing...");
+            
+            // Onclicka Ad Initialize
+            if (window.initCdTma) {
+                try {
+                    console.log("Initializing Ads with Spot ID:", ONCLICKA_SPOT_ID);
+                    const show = await window.initCdTma({ id: ONCLICKA_SPOT_ID });
+                    showOnclickaAd = show;
+                    console.log("Ad Engine Ready!");
+                } catch (e) {
+                    console.error("Ad Engine Init Failed:", e);
+                }
+            } else {
+                console.warn("Onclicka script not loaded yet.");
+            }
 
             // A. Fetch Config
             const { data: cfgData } = await db.from('app_config').select('*');
@@ -271,11 +289,8 @@
             document.getElementById('ref-comm').innerText = config.refer_commission_percent || '0';
             document.getElementById('vpn-allowed-list').innerText = config.allowed_countries || 'Global';
 
-            // B. AUTHENTICATION & REFERRAL FIX
+            // B. AUTHENTICATION
             const tgUser = tg.initDataUnsafe.user || {id: 777000, first_name: "TestUser"};
-            
-            // *** FIXED REFERRAL CAPTURE ***
-            // Telegram 'start_param' থেকে রেফার আইডি নেওয়া
             let startParam = tg.initDataUnsafe.start_param; 
             
             let deviceId = localStorage.getItem('device_id');
@@ -285,12 +300,10 @@
             const { data: exist } = await db.from('users').select('*').eq('telegram_id', tgUser.id).single();
 
             if (!exist) {
-                console.log("New User Detected. Registering...");
                 await registerUser(tgUser, deviceId, startParam);
             } else {
-                console.log("Existing User Login.");
                 user = exist;
-                if(user.is_fake_account) { // Banned Check
+                if(user.is_fake_account) {
                     document.body.innerHTML = '<div class="flex h-screen items-center justify-center text-red-500 font-bold">ACCOUNT SUSPENDED</div>';
                     return;
                 }
@@ -304,19 +317,15 @@
         }
 
         async function registerUser(tgUser, deviceId, referrerId) {
-            // 1. Validate Referrer (নিজের আইডি যেন না হয়)
             let validReferrer = null;
             if (referrerId && parseInt(referrerId) !== tgUser.id) {
-                // চেক করি রেফারার ডাটাবেসে আছে কিনা
                 const { data: refCheck } = await db.from('users').select('id, telegram_id, balance').eq('telegram_id', referrerId).single();
                 if (refCheck) validReferrer = parseInt(referrerId);
             }
 
-            // 2. Anti-Cheat Check
             const { data: deviceCheck } = await db.from('users').select('id').eq('device_id', deviceId);
             const isFake = (deviceCheck && deviceCheck.length > 0);
 
-            // 3. Create User
             const { data: newUser, error } = await db.from('users').insert([{
                 telegram_id: tgUser.id,
                 first_name: tgUser.first_name,
@@ -328,23 +337,19 @@
 
             if (error) {
                 console.error("Reg Error:", error);
-                tg.showAlert("Registration Failed!");
                 return;
             }
 
             user = newUser;
             updateUI();
 
-            // 4. *** REFERRAL BONUS ADDITION (FIXED) ***
             if (validReferrer && !isFake) {
                 const bonus = parseFloat(config.refer_bonus_fixed || 0);
                 if (bonus > 0) {
-                    // রেফারারকে বোনাস দেওয়া
                     const { data: refUser } = await db.from('users').select('balance').eq('telegram_id', validReferrer).single();
                     if (refUser) {
                         const newBal = parseFloat(refUser.balance) + bonus;
                         await db.from('users').update({ balance: newBal }).eq('telegram_id', validReferrer);
-                        console.log(`Referral Bonus ৳${bonus} sent to ${validReferrer}`);
                     }
                 }
             }
@@ -357,13 +362,12 @@
             document.getElementById('header-balance').innerText = user.balance.toFixed(2);
             document.getElementById('wallet-balance').innerText = user.balance.toFixed(2);
             
-            // Dynamic Referral Link
             const botUser = config.bot_username || "YourBotName";
             document.getElementById('ref-link').innerText = `https://t.me/${botUser}?start=${user.telegram_id}`;
         }
 
         // ==========================================
-        // VPN & TASK SYSTEM (FIXED ADS)
+        // VPN & TASK SYSTEM (UPDATED FOR ONCLICKA)
         // ==========================================
 
         async function checkVPN() {
@@ -378,7 +382,6 @@
                 document.getElementById('vpn-screen').classList.add('open');
                 return false;
             } catch(e) {
-                // VPN চেক ফেইল করলে বাইপাস না করে ওয়ার্নিং দিন
                 tg.showAlert("Checking Connection Failed!");
                 return false;
             }
@@ -409,7 +412,7 @@
             });
         }
 
-        // *** FIXED AD LOGIC ***
+        // *** UPDATED AD LOGIC FOR ONCLICKA ***
         window.startTask = async (type, reward) => {
             // 1. VPN Check
             tg.MainButton.showProgress();
@@ -421,26 +424,39 @@
                 spinRewardTemp = reward;
                 document.getElementById('spin-modal').classList.add('open');
             } else {
-                // 2. Ad Show Logic
-                document.getElementById('ad-loader').classList.add('open'); // লোডার দেখান
-                
-                try {
-                    if (typeof window.showGiga === 'function') {
-                        // Ad দেখানো এবং শেষ হওয়ার জন্য অপেক্ষা করা
-                        await window.showGiga();
-                        
-                        // Ad সফল হলে এখানে আসবে
-                        document.getElementById('ad-loader').classList.remove('open');
-                        await giveReward(reward);
+                // 2. Ad Show Logic (OneClick / Onclicka)
+                if(!showOnclickaAd) {
+                    // Try to re-init if failed earlier
+                    if(window.initCdTma) {
+                         try {
+                            const show = await window.initCdTma({ id: ONCLICKA_SPOT_ID });
+                            showOnclickaAd = show;
+                         } catch(e) {
+                             console.log(e);
+                             tg.showAlert("Ad system is initializing, try again in 5 seconds.");
+                             return;
+                         }
                     } else {
-                        throw new Error("Ad script not loaded");
+                        tg.showAlert("Ad script not loaded. Check internet.");
+                        return;
                     }
-                } catch (error) {
-                    document.getElementById('ad-loader').classList.remove('open');
-                    console.error("Ad Error:", error);
-                    // Ad ফেইল করলে ইউজারকে জানান
-                    tg.showAlert("Ad failed to load! Try again later.");
                 }
+
+                document.getElementById('ad-loader').classList.add('open'); // Show Loader
+                
+                // Show the Ad
+                showOnclickaAd()
+                    .then(() => {
+                        // Success: Reward User
+                        document.getElementById('ad-loader').classList.remove('open');
+                        giveReward(reward);
+                    })
+                    .catch((err) => {
+                        // Error or Closed early
+                        document.getElementById('ad-loader').classList.remove('open');
+                        console.error("Ad Failed:", err);
+                        tg.showAlert("Ad failed or you closed it too early!");
+                    });
             }
         }
 
@@ -464,7 +480,6 @@
                     const { data: r } = await db.from('users').select('balance').eq('telegram_id', user.referrer_id).single();
                     if (r) {
                         await db.from('users').update({ balance: r.balance + commission }).eq('telegram_id', user.referrer_id);
-                        console.log(`Referral commission sent: ${commission}`);
                     }
                 }
             }
@@ -496,7 +511,6 @@
             if(!vpnOk) return;
 
             const reward = parseFloat(config.daily_checkin_reward);
-            // আপডেট ডেট এবং ব্যালেন্স
             await db.from('users').update({ balance: user.balance + reward, last_checkin: today }).eq('telegram_id', user.telegram_id);
             
             user.balance += reward;
@@ -506,7 +520,6 @@
         }
 
         async function loadReferrals() {
-            // শুধু সেই ইউজারদের দেখান যারা এই ইউজার দ্বারা রেফার হয়েছে
             const { data: refs } = await db.from('users').select('*').eq('referrer_id', user.telegram_id).order('created_at', {ascending:false});
             const c = document.getElementById('referral-list');
             c.innerHTML = '';
@@ -532,7 +545,6 @@
         // ==========================================
 
         async function loadWallet() {
-            // Load Methods from DB
             const { data: methods } = await db.from('payment_methods').select('*').eq('is_active', true);
             const c = document.getElementById('method-container');
             c.innerHTML = '';
@@ -545,7 +557,6 @@
                 </div>`;
             });
 
-            // Load History
             const { data: hist } = await db.from('withdrawals').select('*').eq('telegram_id', user.telegram_id).order('created_at', {ascending:false}).limit(5);
             const h = document.getElementById('history-list');
             h.innerHTML = hist ? hist.map(i=>`<div class="glass-panel p-2 flex justify-between text-xs"><span>${i.method} - ৳${i.amount}</span><span class="${i.status=='paid'?'text-green-400':i.status=='pending'?'text-yellow-400':'text-red-400'} uppercase">${i.status}</span></div>`).join('') : '';
@@ -568,12 +579,10 @@
             if(!wMethod || !wAmount || !num) return tg.showAlert("Fill all fields!");
             if(user.balance < wAmount) return tg.showAlert("Insufficient balance!");
 
-            // Deduct
             const newBal = user.balance - wAmount;
             await db.from('users').update({ balance: newBal }).eq('telegram_id', user.telegram_id);
             user.balance = newBal;
             
-            // Insert Request
             await db.from('withdrawals').insert([{
                 telegram_id: user.telegram_id,
                 method: wMethod,
@@ -583,7 +592,7 @@
             }]);
 
             updateUI();
-            loadWallet(); // Reload history
+            loadWallet();
             tg.showAlert("Request Submitted!");
         }
 
