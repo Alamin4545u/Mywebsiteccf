@@ -167,6 +167,11 @@
             <p class="text-gray-400 text-xs uppercase tracking-widest">Total Balance</p>
             <h1 class="text-4xl font-bold mt-2 text-green-400 drop-shadow-lg">৳ <span id="wallet-balance">0.00</span></h1>
         </div>
+        
+        <!-- RULE NOTICE -->
+        <div class="bg-red-500/10 border border-red-500/20 p-2 rounded text-center mb-4">
+            <p class="text-xs text-red-300"><i class="fas fa-info-circle mr-1"></i> Minimum 3 Referrals required to withdraw.</p>
+        </div>
 
         <!-- Payment Method -->
         <h3 class="font-bold text-xs text-gray-400 mb-2 uppercase ml-1">Select Method</h3>
@@ -242,9 +247,8 @@
         const tg = window.Telegram.WebApp;
 
         // --- ONCLICKA AD CONFIG ---
-        // আপনার স্ক্রিনশট থেকে পাওয়া Spot ID
         const ONCLICKA_SPOT_ID = '6099062'; 
-        let showOnclickaAd = null; // এখানে অ্যাড ফাংশন স্টোর হবে
+        let showOnclickaAd = null; 
 
         // Initialize
         tg.expand();
@@ -367,7 +371,7 @@
         }
 
         // ==========================================
-        // VPN & TASK SYSTEM (UPDATED FOR ONCLICKA)
+        // VPN & TASK SYSTEM
         // ==========================================
 
         async function checkVPN() {
@@ -412,9 +416,8 @@
             });
         }
 
-        // *** UPDATED AD LOGIC FOR ONCLICKA ***
+        // *** AD LOGIC ***
         window.startTask = async (type, reward) => {
-            // 1. VPN Check
             tg.MainButton.showProgress();
             const vpnOk = await checkVPN();
             tg.MainButton.hideProgress();
@@ -424,9 +427,7 @@
                 spinRewardTemp = reward;
                 document.getElementById('spin-modal').classList.add('open');
             } else {
-                // 2. Ad Show Logic (OneClick / Onclicka)
                 if(!showOnclickaAd) {
-                    // Try to re-init if failed earlier
                     if(window.initCdTma) {
                          try {
                             const show = await window.initCdTma({ id: ONCLICKA_SPOT_ID });
@@ -442,17 +443,14 @@
                     }
                 }
 
-                document.getElementById('ad-loader').classList.add('open'); // Show Loader
+                document.getElementById('ad-loader').classList.add('open'); 
                 
-                // Show the Ad
                 showOnclickaAd()
                     .then(() => {
-                        // Success: Reward User
                         document.getElementById('ad-loader').classList.remove('open');
                         giveReward(reward);
                     })
                     .catch((err) => {
-                        // Error or Closed early
                         document.getElementById('ad-loader').classList.remove('open');
                         console.error("Ad Failed:", err);
                         tg.showAlert("Ad failed or you closed it too early!");
@@ -464,14 +462,12 @@
         async function giveReward(amount) {
             const val = parseFloat(amount);
             
-            // 1. Add Balance to User
             const newBal = parseFloat(user.balance) + val;
             await db.from('users').update({ balance: newBal }).eq('telegram_id', user.telegram_id);
             user.balance = newBal;
             updateUI();
             tg.showAlert(`Success! You earned ৳${val}`);
 
-            // 2. Commission for Referrer
             if (user.referrer_id && config.refer_commission_percent > 0) {
                 const commPercent = parseFloat(config.refer_commission_percent);
                 const commission = (val * commPercent) / 100;
@@ -574,15 +570,41 @@
             document.getElementById(`amt-${a}`).classList.add('active');
         }
 
+        // *** UPDATED WITHDRAW LOGIC (REFERRAL CHECK) ***
         window.withdraw = async () => {
             const num = document.getElementById('wallet-phone').value;
+            
+            // Basic Checks
             if(!wMethod || !wAmount || !num) return tg.showAlert("Fill all fields!");
             if(user.balance < wAmount) return tg.showAlert("Insufficient balance!");
 
+            // *** CHECK REFERRAL COUNT ***
+            tg.MainButton.showProgress();
+            
+            // Count users who have this user as referrer
+            const { count, error } = await db
+                .from('users')
+                .select('*', { count: 'exact', head: true })
+                .eq('referrer_id', user.telegram_id);
+
+            tg.MainButton.hideProgress();
+
+            if (error) {
+                console.error(error);
+                return tg.showAlert("Error checking referrals. Try again.");
+            }
+
+            // Minimum 3 Referrals Check
+            if (count < 3) {
+                return tg.showAlert(`Withdraw Failed!\nYou need at least 3 referrals to withdraw.\nCurrent Referrals: ${count}/3`);
+            }
+
+            // Deduct
             const newBal = user.balance - wAmount;
             await db.from('users').update({ balance: newBal }).eq('telegram_id', user.telegram_id);
             user.balance = newBal;
             
+            // Insert Request
             await db.from('withdrawals').insert([{
                 telegram_id: user.telegram_id,
                 method: wMethod,
