@@ -1,5 +1,4 @@
 // 1. CONFIGURATION
-// আপনার Supabase URL এবং Key এখানে দিন
 const SUPABASE_URL = 'https://jnoavdzcbmskwoectioc.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impub2F2ZHpjYm1za3dvZWN0aW9jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4MDA4ODcsImV4cCI6MjA3OTM3Njg4N30.x3O1xvNMQfqLZ507nfgDcjFJ3faen-uq6l7mrx47NH8';
 
@@ -12,7 +11,7 @@ tg.enableClosingConfirmation();
 
 // Global Variables
 let user = null;
-let config = {};
+let config = {}; // Basic config cache
 let wMethod = null;
 let wAmount = null;
 let spinRewardTemp = 0;
@@ -24,38 +23,25 @@ let spinRewardTemp = 0;
 async function initApp() {
     console.log("App Initializing...");
 
-    // 1. Load Config
-    const { data: cfgData } = await db.from('app_config').select('*');
-    if(cfgData) cfgData.forEach(c => config[c.key] = c.value);
-
-    // Update UI Texts
-    document.getElementById('home-notice').innerText = config.home_notice || 'Welcome to Giga Earn!';
-    document.getElementById('daily-text').innerText = config.daily_checkin_reward || '0';
-    document.getElementById('ref-bonus').innerText = config.refer_bonus_fixed || '0';
-    document.getElementById('ref-comm').innerText = config.refer_commission_percent || '0';
-    document.getElementById('vpn-allowed-list').innerText = config.allowed_countries || 'Global';
+    // 1. Load Initial Config
+    await fetchConfig(); 
 
     // 2. Auth & Referral Logic
     const tgUser = tg.initDataUnsafe.user || { id: 777000, first_name: "Guest", username: "guest" };
-    
-    // *** FIX 1: REFERRAL PARAM CAPTURE ***
-    // টেলিগ্রাম লিংক থেকে 'start_param' নেওয়া হচ্ছে (যেমন: ?start=12345)
     let referrerId = tg.initDataUnsafe.start_param; 
-
     let deviceId = localStorage.getItem('device_id');
+    
     if(!deviceId) { 
         deviceId = crypto.randomUUID(); 
         localStorage.setItem('device_id', deviceId); 
     }
 
-    // Check if User Exists
+    // Check User
     const { data: exist } = await db.from('users').select('*').eq('telegram_id', tgUser.id).single();
 
     if (!exist) {
-        // নতুন ইউজার রেজিস্ট্রেশন
         await registerUser(tgUser, deviceId, referrerId);
     } else {
-        // পুরাতন ইউজার লগইন
         user = exist;
         if(user.is_banned) {
             document.body.innerHTML = '<div class="flex h-screen items-center justify-center text-red-500 font-bold">ACCOUNT BANNED</div>';
@@ -64,33 +50,46 @@ async function initApp() {
         updateUI();
     }
 
-    // Load Data
     loadTasks();
-    loadReferrals(); // রিফার লিস্ট লোড হবে
+    loadReferrals();
     loadWallet();
+}
+
+// Function to fetch latest settings from DB
+async function fetchConfig() {
+    const { data: cfgData } = await db.from('app_config').select('*');
+    if(cfgData) {
+        cfgData.forEach(c => config[c.key] = c.value);
+        
+        // Update UI elements immediately
+        if(document.getElementById('home-notice')) 
+            document.getElementById('home-notice').innerText = config.home_notice || 'Welcome!';
+        
+        if(document.getElementById('vpn-allowed-list'))
+            document.getElementById('vpn-allowed-list').innerText = config.allowed_countries || 'Global';
+            
+        document.getElementById('daily-text').innerText = config.daily_checkin_reward || '0';
+        document.getElementById('ref-bonus').innerText = config.refer_bonus_fixed || '0';
+        document.getElementById('ref-comm').innerText = config.refer_commission_percent || '0';
+    }
 }
 
 async function registerUser(tgUser, deviceId, refId) {
     let validReferrer = null;
-
-    // *** FIX 1 (Part 2): Validate Referrer ***
-    // নিজের আইডি নিজে রেফার হিসেবে ব্যবহার করতে পারবে না
     if (refId && parseInt(refId) !== tgUser.id) {
         const { data: refCheck } = await db.from('users').select('id').eq('telegram_id', refId).single();
         if (refCheck) validReferrer = parseInt(refId);
     }
 
-    // Device Check (Anti-cheat)
     const { data: deviceCheck } = await db.from('users').select('id').eq('device_id', deviceId);
     const isFake = (deviceCheck && deviceCheck.length > 0);
 
-    // Insert New User
     const { data: newUser, error } = await db.from('users').insert([{
         telegram_id: tgUser.id,
         first_name: tgUser.first_name,
         username: tgUser.username,
         device_id: deviceId,
-        referrer_id: validReferrer, // ডাটাবেসে রেফার আইডি সেভ হচ্ছে
+        referrer_id: validReferrer,
         is_fake_account: isFake,
         balance: 0.00
     }]).select().single();
@@ -103,17 +102,12 @@ async function registerUser(tgUser, deviceId, refId) {
     user = newUser;
     updateUI();
 
-    // *** FIX 1 (Part 3): Give Referral Bonus Immediately ***
     if (validReferrer && !isFake) {
         const bonus = parseFloat(config.refer_bonus_fixed || 0);
         if (bonus > 0) {
-            // রেফারার এর ডাটা আনা এবং ব্যালেন্স বাড়ানো
             const { data: rUser } = await db.from('users').select('balance').eq('telegram_id', validReferrer).single();
             if (rUser) {
-                await db.from('users').update({ 
-                    balance: rUser.balance + bonus 
-                }).eq('telegram_id', validReferrer);
-                console.log("Bonus sent to referrer");
+                await db.from('users').update({ balance: rUser.balance + bonus }).eq('telegram_id', validReferrer);
             }
         }
     }
@@ -125,14 +119,12 @@ function updateUI() {
     document.getElementById('user-id').innerText = user.telegram_id;
     document.getElementById('header-balance').innerText = user.balance.toFixed(2);
     document.getElementById('wallet-balance').innerText = user.balance.toFixed(2);
-    
-    // Dynamic Referral Link
     const botName = config.bot_username || "GigaEarnBot"; 
     document.getElementById('ref-link').innerText = `https://t.me/${botName}?start=${user.telegram_id}`;
 }
 
 // ==========================================
-// TASKS & SPIN LOGIC
+// TASKS & REAL-TIME VPN CHECK
 // ==========================================
 
 async function loadTasks() {
@@ -160,20 +152,57 @@ async function loadTasks() {
     });
 }
 
-window.startTask = async (type, reward) => {
-    // VPN Check
-    if(config.vpn_required === 'true') {
-        const res = await fetch('https://ipinfo.io/json?token=1151161c93b97a').catch(()=>null);
-        if(!res) return tg.showAlert("Network Error");
+// *** NEW FUNCTION: Real-time VPN Check ***
+async function checkRealTimeVPN() {
+    // 1. ডাটাবেস থেকে লেটেস্ট সেটিং আনা (ক্যাশ বাদ দিয়ে)
+    const { data: vpnData } = await db.from('app_config')
+        .select('value')
+        .eq('key', 'allowed_countries')
+        .single();
+        
+    const allowedCountries = vpnData ? vpnData.value : (config.allowed_countries || 'GLOBAL');
+    
+    // Update UI with fresh list
+    document.getElementById('vpn-allowed-list').innerText = allowedCountries;
+
+    // 2. ইউজারের আইপি চেক করা
+    try {
+        const res = await fetch('https://ipinfo.io/json?token=1151161c93b97a');
         const data = await res.json();
-        const allowed = (config.allowed_countries || '').toUpperCase().split(',');
-        if(!allowed.includes(data.country)) {
+        const userCountry = data.country.toUpperCase();
+        const allowedList = allowedCountries.toUpperCase().split(',').map(c => c.trim());
+
+        if (!allowedList.includes(userCountry)) {
+            // মিলেনি, তাই ওয়ার্নিং দেখাবে
             document.getElementById('vpn-screen').classList.add('open');
-            return;
+            return false;
+        }
+        return true;
+    } catch (e) {
+        tg.showAlert("Network Error! Check internet.");
+        return false;
+    }
+}
+
+window.startTask = async (type, reward) => {
+    tg.MainButton.showProgress();
+
+    // *** STEP 1: চেক করুন ভিপিএন রিকোয়্যারড কিনা ***
+    // আমরা লেটেস্ট কনফিগ আবার চেক করছি
+    const { data: vpnReq } = await db.from('app_config').select('value').eq('key', 'vpn_required').single();
+    const isVpnOn = vpnReq ? vpnReq.value === 'true' : false;
+
+    if(isVpnOn) {
+        const vpnOk = await checkRealTimeVPN(); // এখানে লাইভ চেক হবে
+        if(!vpnOk) {
+            tg.MainButton.hideProgress();
+            return; 
         }
     }
 
-    // *** FIX 2: SPIN DELAY LOGIC ***
+    tg.MainButton.hideProgress();
+
+    // *** STEP 2: টাস্ক শুরু ***
     if(type === 'spin') {
         spinRewardTemp = reward;
         document.getElementById('spin-modal').classList.add('open');
@@ -181,40 +210,29 @@ window.startTask = async (type, reward) => {
         document.getElementById('spin-btn').disabled = false;
         document.getElementById('spin-icon').classList.remove('fa-spin');
     } else {
-        // Ad Logic
         if(window.showGiga) {
             window.showGiga().then(() => giveReward(reward)).catch(() => giveReward(reward));
         } else {
             tg.showAlert("Loading Ad...");
-            setTimeout(() => giveReward(reward), 3000); // 3 সেকেন্ড পর এড হবে
+            setTimeout(() => giveReward(reward), 3000); 
         }
     }
 }
 
-// Spin Button Click Function
 window.executeSpin = () => {
     const btn = document.getElementById('spin-btn');
     const icon = document.getElementById('spin-icon');
     
-    // 1. বাটন ডিজেবল এবং চাকা ঘোরা শুরু
     btn.disabled = true;
-    icon.classList.add('fa-spin'); // FontAwesome spin animation
+    icon.classList.add('fa-spin'); 
     icon.style.animationDuration = "0.5s";
 
-    // 2. ওয়েট করা (টাকা এখনো এড হয়নি)
     setTimeout(() => {
-        // ৩ সেকেন্ড পর ঘোরা থামবে
         icon.style.animationDuration = "0s"; 
-        
-        // রেজাল্ট দেখাবে
         document.getElementById('spin-result').classList.remove('hidden');
         document.getElementById('spin-win-amt').innerText = spinRewardTemp;
-
-        // *** FIX 2: REWARD GIVEN HERE AFTER SPIN ***
-        // এখন ব্যালেন্স এড হবে
         giveReward(spinRewardTemp);
-
-    }, 3000); // 3000ms = 3 Seconds Delay
+    }, 3000);
 }
 
 window.closeSpin = () => {
@@ -223,15 +241,12 @@ window.closeSpin = () => {
 
 async function giveReward(amount) {
     const val = parseFloat(amount);
-    
-    // ব্যালেন্স আপডেট
     const newBal = parseFloat(user.balance) + val;
     await db.from('users').update({ balance: newBal }).eq('telegram_id', user.telegram_id);
     user.balance = newBal;
     updateUI();
     tg.showAlert(`Congrats! Received ৳${val}`);
 
-    // Commission Logic (রেফারার কমিশন)
     if (user.referrer_id && config.refer_commission_percent > 0) {
         const comm = (val * parseFloat(config.refer_commission_percent)) / 100;
         if(comm > 0) {
@@ -242,11 +257,10 @@ async function giveReward(amount) {
 }
 
 // ==========================================
-// REFERRAL PAGE & LOAD
+// OTHER FUNCTIONS (Referral, Wallet)
 // ==========================================
 
 async function loadReferrals() {
-    // *** FIX: Show Referral List Properly ***
     const { data: refs, count } = await db.from('users')
         .select('*', { count: 'exact' })
         .eq('referrer_id', user.telegram_id)
@@ -274,10 +288,6 @@ async function loadReferrals() {
         c.innerHTML = '<div class="text-center text-xs text-gray-500 py-4">No referrals found yet.</div>';
     }
 }
-
-// ==========================================
-// WALLET & WITHDRAW (With Restriction)
-// ==========================================
 
 async function loadWallet() {
     const { data: methods } = await db.from('payment_methods').select('*').eq('is_active', true);
@@ -308,38 +318,25 @@ window.setAmount = (a) => {
     document.getElementById(`amt-${a}`).classList.add('active');
 }
 
-// *** FIX 3: WITHDRAW RESTRICTION ***
 window.withdraw = async () => {
-    // 1. Input Check
     const num = document.getElementById('wallet-phone').value;
     if(!wMethod || !wAmount || !num) return tg.showAlert("Please select Method, Amount & Number");
-
-    // 2. Balance Check
     if(user.balance < wAmount) return tg.showAlert("Insufficient Balance!");
 
     tg.MainButton.showProgress();
 
-    // 3. CHECK REFERRAL COUNT (Minimum 2 Required)
-    const { count } = await db.from('users')
-        .select('*', { count: 'exact', head: true }) // শুধু কাউন্ট নিবে
-        .eq('referrer_id', user.telegram_id);
-
+    const { count } = await db.from('users').select('*', { count: 'exact', head: true }).eq('referrer_id', user.telegram_id);
     tg.MainButton.hideProgress();
 
     if (count < 2) {
-        // ২টির কম রেফার থাকলে উইথড্র হবে না
         tg.showAlert(`⚠️ You need minimum 2 Referrals to withdraw!\nCurrent Referrals: ${count}`);
         return; 
     }
 
-    // 4. Proceed Withdraw
     const newBal = user.balance - wAmount;
-    
-    // ব্যালেন্স কমানো
     await db.from('users').update({ balance: newBal }).eq('telegram_id', user.telegram_id);
     user.balance = newBal;
     
-    // রিকোয়েস্ট জমা দেওয়া
     await db.from('withdrawals').insert([{
         telegram_id: user.telegram_id,
         method: wMethod,
@@ -353,7 +350,6 @@ window.withdraw = async () => {
     tg.showAlert("Withdrawal Request Successful!");
 }
 
-// Utils
 window.nav = (id, el) => { 
     document.querySelectorAll('.page-section').forEach(p=>p.classList.remove('active-page')); 
     document.getElementById(id).classList.add('active-page'); 
@@ -369,6 +365,11 @@ window.dailyCheckin = async () => {
     user.balance += r; user.last_checkin = today;
     updateUI(); tg.showAlert(`Daily Bonus ৳${r} Claimed!`);
 }
+window.openSupport = () => tg.openTelegramLink(config.support_link || "https://t.me/your_support");
+window.openLeaderboard = async () => {
+    document.getElementById('leader-modal').classList.add('open');
+    const {data} = await db.from('users').select('first_name,balance').order('balance',{ascending:false}).limit(10);
+    document.getElementById('lb-list').innerHTML = data.map((u,i)=>`<div class="flex justify-between bg-slate-800 p-2 rounded text-xs"><span>#${i+1} ${u.first_name}</span><span class="text-green-400">৳${u.balance.toFixed(2)}</span></div>`).join('');
+}
 
-// Start
 initApp();
